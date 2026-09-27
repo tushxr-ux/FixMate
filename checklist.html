@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FixMate — Implementation Control Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #1A56DB;
+  --blue-dark: #003fb1;
+  --blue-light: #E8EFFC;
+  --white: #ffffff;
+  --navy: #12172b;
+  --gray: #5b6478;
+  --border: #dce3f5;
+  --bg: #F5F8FF;
+  --surface: #ffffff;
+  --surface-2: #EEF3FE;
+  --green: #0f7a3d;
+  --green-bg: #dbf5e5;
+  --amber: #92400e;
+  --amber-bg: #fef3c7;
+  --red: #991b1b;
+  --red-bg: #fee2e2;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
+
+header { background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%); color: #fff; padding: 32px 40px 28px; }
+header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+header p { font-size: 14px; color: rgba(255,255,255,.75); margin-top: 4px; }
+
+.progress-wrap { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 12px rgba(26,86,219,.08); }
+.stats { display: flex; gap: 32px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.stat .val { font-size: 24px; font-weight: 800; color: var(--blue); }
+.stat .lbl { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; }
+.stat.done .val { color: var(--green); }
+.stat.inprog .val { color: #b45309; }
+.stat.pct .val { font-size: 28px; }
+.prog-bar { height: 8px; background: var(--blue-light); border-radius: var(--radius-pill); overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-dark)); border-radius: var(--radius-pill); transition: width .4s ease; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 32px 40px 80px; }
+
+.phase { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 20px; overflow: hidden; }
+.phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; background: var(--surface); transition: background .15s; }
+.phase-header:hover { background: var(--surface-2); }
+.phase-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--blue-light); color: var(--blue); flex-shrink: 0; }
+.phase-title { font-size: 15px; font-weight: 700; flex: 1; }
+.phase-count { font-size: 12px; color: var(--gray); }
+.phase-chevron { font-size: 18px; color: var(--gray); transition: transform .2s; }
+.phase.open .phase-chevron { transform: rotate(180deg); }
+.phase-body { display: none; padding: 0 20px 16px; }
+.phase.open .phase-body { display: block; }
+
+.task { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.task:last-child { border-bottom: none; }
+.task-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 1px; transition: border-color .15s, background .15s; font-size: 13px; font-weight: 700; }
+.task-check:hover { border-color: var(--blue); }
+.task.done .task-check { background: var(--green); border-color: var(--green); color: #fff; }
+.task.inprog .task-check { background: var(--amber-bg); border-color: #d97706; color: #92400e; }
+.task-text { flex: 1; font-size: 14px; line-height: 1.5; }
+.task.done .task-text { color: var(--gray); text-decoration: line-through; }
+.task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.task-btn { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--gray); cursor: pointer; transition: background .15s, color .15s; }
+.task-btn:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+.task-btn.done-btn { color: var(--green); border-color: var(--green-bg); }
+.task-btn.done-btn:hover { background: var(--green-bg); }
+.task-btn.prog-btn { color: #b45309; border-color: var(--amber-bg); }
+.task-btn.prog-btn:hover { background: var(--amber-bg); }
+
+.audit-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; font-size: 13px; line-height: 1.7; }
+.audit-box h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--blue); }
+.audit-box ul { padding-left: 18px; }
+.audit-box li { margin-bottom: 3px; }
+.gap-item { color: var(--red); }
+.ok-item { color: var(--green); }
+
+.legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; font-size: 12px; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-chip { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+
+@media (max-width: 700px) {
+  header, .progress-wrap, main { padding-left: 16px; padding-right: 16px; }
+  .stats { gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FixMate &mdash; Implementation Control Center</h1>
+  <p>Mandatory project checklist. A task may only be marked complete after it has been implemented, tested, and works end-to-end.</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="stats">
+    <div class="stat pct"><div class="val" id="pctVal">0%</div><div class="lbl">Progress</div></div>
+    <div class="stat done"><div class="val" id="doneVal">0</div><div class="lbl">Completed</div></div>
+    <div class="stat inprog"><div class="val" id="inprogVal">0</div><div class="lbl">In Progress</div></div>
+    <div class="stat"><div class="val" id="remainVal">0</div><div class="lbl">Remaining</div></div>
+    <div class="stat"><div class="val" id="totalVal">0</div><div class="lbl">Total Tasks</div></div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<main>
+
+<div class="legend">
+  <strong style="font-size:12px;color:var(--gray);">Legend:</strong>
+  <div class="legend-item"><div class="legend-chip" style="background:var(--green);color:#fff;">&#10003;</div> Completed &amp; tested</div>
+  <div class="legend-item"><div class="legend-chip" style="background:var(--amber-bg);color:#92400e;">~</div> In Progress</div>
+  <div class="legend-item"><div class="legend-chip" style="border:2px solid var(--border);"></div> Not Started</div>
+</div>
+
+<div id="phases-root"></div>
+
+</main>
+
+<script>
+const PHASES = [
+  {
+    id:'p0', label:'Phase 0', title:'Audit + Project Understanding', open:true,
+    audit: true,
+    tasks:[
+      {id:'p0_1', text:'Inspect entire existing project structure'},
+      {id:'p0_2', text:'Inspect current prototype (fixmate_prototype.html)'},
+      {id:'p0_3', text:'Identify current tech stack'},
+      {id:'p0_4', text:'Identify current routes / screens'},
+      {id:'p0_5', text:'Identify current components and UI patterns'},
+      {id:'p0_6', text:'Identify current backend / data layer'},
+      {id:'p0_7', text:'Identify mock data'},
+      {id:'p0_8', text:'Identify existing map implementation'},
+      {id:'p0_9', text:'Identify existing authentication'},
+      {id:'p0_10', text:'Identify existing provider / admin functionality'},
+      {id:'p0_11', text:'Map current functionality against specification'},
+      {id:'p0_12', text:'Create implementation gap map'},
+    ]
+  },
+  {
+    id:'p1', label:'Phase 1', title:'Foundation / Architecture',
+    tasks:[
+      {id:'p1_1', text:'Project architecture setup (multi-file structure)'},
+      {id:'p1_2', text:'Shared design system / CSS tokens'},
+      {id:'p1_3', text:'Blue + white theme enforcement'},
+      {id:'p1_4', text:'Routing system (SPA or multi-page)'},
+      {id:'p1_5', text:'Role system: CUSTOMER / PROVIDER / ADMIN'},
+      {id:'p1_6', text:'Authentication foundation (login / signup)'},
+      {id:'p1_7', text:'Data models (jobs, users, providers, quotes)'},
+      {id:'p1_8', text:'Data persistence layer (localStorage or backend)'},
+      {id:'p1_9', text:'Shared UI components (topbar, cards, buttons, tabs)'},
+      {id:'p1_10', text:'Notification / state framework'},
+      {id:'p1_11', text:'Error handling framework'},
+      {id:'p1_12', text:'Loading / empty state system'},
+      {id:'p1_13', text:'Route protection (role-based)'},
+      {id:'p1_14', text:'Environment variable configuration'},
+      {id:'p1_15', text:'Project builds and runs without errors'},
+    ]
+  },
+  {
+    id:'p2', label:'Phase 2', title:'Real Map + Location',
+    tasks:[
+      {id:'p2_1', text:'Leaflet / React-Leaflet or MapLibre integrated (real tiles, not fake SVG)'},
+      {id:'p2_2', text:'Current location detection (Geolocation API)'},
+      {id:'p2_3', text:'Location permission handling (denied / unavailable states)'},
+      {id:'p2_4', text:'Search location / address autocomplete'},
+      {id:'p2_5', text:'Map pan / zoom interaction'},
+      {id:'p2_6', text:'Marker placement on map tap'},
+      {id:'p2_7', text:'Address selection from map'},
+      {id:'p2_8', text:'Reverse geocoding (coordinates to address)'},
+      {id:'p2_9', text:'Confirm address UI'},
+      {id:'p2_10', text:'Provider coordinates on map (mock data with real coords)'},
+      {id:'p2_11', text:'Distance calculation to providers'},
+      {id:'p2_12', text:'Service radius display'},
+      {id:'p2_13', text:'Provider map markers (differentiated from customer)'},
+      {id:'p2_14', text:'Selected provider marker highlight'},
+      {id:'p2_15', text:'Map tested in running application (tiles actually load)'},
+    ]
+  },
+  {
+    id:'p3', label:'Phase 3', title:'Customer Core MVP',
+    tasks:[
+      {id:'p3_1', text:'Customer signup screen'},
+      {id:'p3_2', text:'Customer login screen'},
+      {id:'p3_3', text:'Customer profile screen'},
+      {id:'p3_4', text:'Home screen (categories, recent activity)'},
+      {id:'p3_5', text:'Category selection screen'},
+      {id:'p3_6', text:'Subcategory / item selection screen'},
+      {id:'p3_7', text:'Search within categories'},
+      {id:'p3_8', text:'Issue description screen'},
+      {id:'p3_9', text:'Photo upload (functional, not alert())'},
+      {id:'p3_10', text:'Immediate / Scheduled toggle'},
+      {id:'p3_11', text:'Real location screen (with real map)'},
+      {id:'p3_12', text:'Booking request submission'},
+      {id:'p3_13', text:'Provider matching screen (animated, real search)'},
+      {id:'p3_14', text:'Provider profile view'},
+      {id:'p3_15', text:'Provider assignment confirmation'},
+      {id:'p3_16', text:'ETA / live tracking screen (real map)'},
+      {id:'p3_17', text:'Diagnosis screen'},
+      {id:'p3_18', text:'Itemized quote screen (visiting fee + parts + labour + add-ons)'},
+      {id:'p3_19', text:'Customer quote approval'},
+      {id:'p3_20', text:'Repair in-progress screen'},
+      {id:'p3_21', text:'Job completion screen'},
+      {id:'p3_22', text:'Payment screen (functional, not alert())'},
+      {id:'p3_23', text:'Invoice screen (post-payment)'},
+      {id:'p3_24', text:'Rating screen'},
+      {id:'p3_25', text:'Service history screen'},
+      {id:'p3_26', text:'Full customer happy path tested end-to-end'},
+    ]
+  },
+  {
+    id:'p4', label:'Phase 4', title:'Provider Core MVP',
+    tasks:[
+      {id:'p4_1', text:'Provider signup screen'},
+      {id:'p4_2', text:'Provider login screen'},
+      {id:'p4_3', text:'Identity / business information form'},
+      {id:'p4_4', text:'Document upload (functional)'},
+      {id:'p4_5', text:'Specialty declaration'},
+      {id:'p4_6', text:'Service radius configuration'},
+      {id:'p4_7', text:'Availability toggle'},
+      {id:'p4_8', text:'Verification status display'},
+      {id:'p4_9', text:'Provider dashboard (incoming jobs)'},
+      {id:'p4_10', text:'Incoming job notification'},
+      {id:'p4_11', text:'Accept / Decline job'},
+      {id:'p4_12', text:'Customer + location details view'},
+      {id:'p4_13', text:'Navigation / map to customer location'},
+      {id:'p4_14', text:'Start diagnosis flow'},
+      {id:'p4_15', text:'Diagnosis notes input'},
+      {id:'p4_16', text:'Evidence photos upload'},
+      {id:'p4_17', text:'Create quote (parts + labour + visiting fee)'},
+      {id:'p4_18', text:'Add parts line items'},
+      {id:'p4_19', text:'Add labour line items'},
+      {id:'p4_20', text:'Submit quote to customer'},
+      {id:'p4_21', text:'Receive customer approval notification'},
+      {id:'p4_22', text:'Change order / add-on flow'},
+      {id:'p4_23', text:'Complete job action'},
+      {id:'p4_24', text:'Before / after evidence upload'},
+      {id:'p4_25', text:'Earnings summary'},
+      {id:'p4_26', text:'Job history (provider side)'},
+      {id:'p4_27', text:'Ratings received'},
+      {id:'p4_28', text:'Customer and Provider connected via same job record (not disconnected mocks)'},
+    ]
+  },
+  {
+    id:'p5', label:'Phase 5', title:'Pricing / Change-Order / Transparency',
+    tasks:[
+      {id:'p5_1', text:'Visiting fee clearly shown in quote'},
+      {id:'p5_2', text:'Initial quote (parts + labour + visiting fee)'},
+      {id:'p5_3', text:'Running total UI (visiting fee + parts + labour + add-ons = total)'},
+      {id:'p5_4', text:'Customer approval step before repair begins'},
+      {id:'p5_5', text:'Change-order flow (additional issue found)'},
+      {id:'p5_6', text:'Revision counter display (e.g. revision 1 of 3)'},
+      {id:'p5_7', text:'Revision history viewable'},
+      {id:'p5_8', text:'Customer accept revision'},
+      {id:'p5_9', text:'Customer reject revision (path, not dead end)'},
+      {id:'p5_10', text:'Final amount display after all revisions'},
+      {id:'p5_11', text:'Receipt / invoice generation'},
+    ]
+  },
+  {
+    id:'p6', label:'Phase 6', title:'Trust / Safety / Evidence',
+    tasks:[
+      {id:'p6_1', text:'FixMate Verified badge on provider profile'},
+      {id:'p6_2', text:'Identity verified signal'},
+      {id:'p6_3', text:'Business verified signal'},
+      {id:'p6_4', text:'Provider specialty badges'},
+      {id:'p6_5', text:'Before / after evidence display (customer view)'},
+      {id:'p6_6', text:'Complaint flow: Report a Problem'},
+      {id:'p6_7', text:'Dispute flow: select issue, upload evidence, submit'},
+      {id:'p6_8', text:'Dispute categories (wrong diagnosis, unexpected charge, damage, poor repair, no-show, other)'},
+      {id:'p6_9', text:'Dispute review status display'},
+      {id:'p6_10', text:'Provider: limited visibility before verification'},
+      {id:'p6_11', text:'Provider: cancellation / no-show record'},
+    ]
+  },
+  {
+    id:'p7', label:'Phase 7', title:'Cancellation / No-Show / Edge Cases',
+    tasks:[
+      {id:'p7_1', text:'Customer: cancel before dispatch'},
+      {id:'p7_2', text:'Customer: cancel after dispatch (visiting fee logic)'},
+      {id:'p7_3', text:'Customer: unavailable / no-show'},
+      {id:'p7_4', text:'Provider: cancellation'},
+      {id:'p7_5', text:'Provider: no-show'},
+      {id:'p7_6', text:'Provider: late arrival / excused emergency'},
+      {id:'p7_7', text:'No-provider fallback: expand radius / notify me / schedule later'},
+      {id:'p7_8', text:'Network failure error state + retry'},
+      {id:'p7_9', text:'Location failure error state'},
+      {id:'p7_10', text:'Upload failure error state'},
+      {id:'p7_11', text:'Payment failure error state'},
+      {id:'p7_12', text:'Quote rejection path (no dead end)'},
+      {id:'p7_13', text:'No dead-end states anywhere in the app'},
+    ]
+  },
+  {
+    id:'p8', label:'Phase 8', title:'Roadside Assistance MVP',
+    tasks:[
+      {id:'p8_1', text:'Roadside Assistance category entry point'},
+      {id:'p8_2', text:'Vehicle type selection (bike / car)'},
+      {id:'p8_3', text:'Roadside issue types (battery, tyre, fuel, towing, fault)'},
+      {id:'p8_4', text:'Real location on roadside map'},
+      {id:'p8_5', text:'Mechanic matching + ETA (real map)'},
+      {id:'p8_6', text:'Complete roadside flow: Mechanic -> Battery Dead -> Map -> Quote -> Repair -> Payment -> History'},
+      {id:'p8_7', text:'Emergency boundary: Accident / Injury / Active Traffic shows emergency contacts, NOT repair dispatch'},
+      {id:'p8_8', text:'Fuel-out specific logic'},
+      {id:'p8_9', text:'Towing flow'},
+    ]
+  },
+  {
+    id:'p9', label:'Phase 9', title:'Scheduled Booking',
+    tasks:[
+      {id:'p9_1', text:'Date picker (functional)'},
+      {id:'p9_2', text:'Time slot selection'},
+      {id:'p9_3', text:'Slot confirmation screen'},
+      {id:'p9_4', text:'Commitment / hold concept (labelled as illustrative)'},
+      {id:'p9_5', text:'Customer no-show handling for scheduled booking'},
+      {id:'p9_6', text:'Provider no-show handling for scheduled booking'},
+      {id:'p9_7', text:'Provider cancellation for scheduled booking'},
+      {id:'p9_8', text:'Refund / release state'},
+      {id:'p9_9', text:'Appointment status display'},
+    ]
+  },
+  {
+    id:'p10', label:'Phase 10', title:'Payment + Invoice',
+    tasks:[
+      {id:'p10_1', text:'Payment summary screen (visiting fee + parts + labour + add-ons + total)'},
+      {id:'p10_2', text:'Payment method options (UPI / Card / Wallet / Cash)'},
+      {id:'p10_3', text:'Sandbox / test payment flow (no alert())'},
+      {id:'p10_4', text:'Payment success state with transaction ID'},
+      {id:'p10_5', text:'Invoice screen (job ID, customer, provider, diagnosis, itemized, total, date, payment status)'},
+      {id:'p10_6', text:'Invoice accessible from service history'},
+    ]
+  },
+  {
+    id:'p11', label:'Phase 11', title:'Service History + Retention',
+    tasks:[
+      {id:'p11_1', text:'Service history list (all completed jobs)'},
+      {id:'p11_2', text:'Job detail view (provider, issue, diagnosis, parts, labour, total, evidence, invoice, rating)'},
+      {id:'p11_3', text:'Book Again action (rebook same provider)'},
+      {id:'p11_4', text:'Report a Problem action from history'},
+      {id:'p11_5', text:'Previous-provider rebooking flow'},
+      {id:'p11_6', text:'Warranty note display (if available)'},
+    ]
+  },
+  {
+    id:'p12', label:'Phase 12', title:'Admin / Operations Dashboard',
+    tasks:[
+      {id:'p12_1', text:'Admin login'},
+      {id:'p12_2', text:'Provider verification queue'},
+      {id:'p12_3', text:'Active jobs monitor'},
+      {id:'p12_4', text:'Coverage gaps view (map-based)'},
+      {id:'p12_5', text:'Provider monitoring (cancellations, no-shows, ratings)'},
+      {id:'p12_6', text:'Quote revision monitoring'},
+      {id:'p12_7', text:'Cancellations view'},
+      {id:'p12_8', text:'Complaints view'},
+      {id:'p12_9', text:'Disputes view (with actual job record + evidence)'},
+      {id:'p12_10', text:'User management'},
+      {id:'p12_11', text:'Basic analytics (jobs, providers, revenue)'},
+      {id:'p12_12', text:'Admin data reflects actual product records (not disconnected mocks)'},
+    ]
+  },
+  {
+    id:'p13', label:'Phase 13', title:'Responsive Public Website',
+    tasks:[
+      {id:'p13_1', text:'Home page'},
+      {id:'p13_2', text:'How FixMate Works page'},
+      {id:'p13_3', text:'Services page'},
+      {id:'p13_4', text:'For Customers page'},
+      {id:'p13_5', text:'For Providers page'},
+      {id:'p13_6', text:'Trust and Safety page'},
+      {id:'p13_7', text:'Roadside Assistance page'},
+      {id:'p13_8', text:'About page'},
+      {id:'p13_9', text:'FAQ page'},
+      {id:'p13_10', text:'Contact page'},
+      {id:'p13_11', text:'Sign In / Get Started pages'},
+      {id:'p13_12', text:'Website leads into working product'},
+      {id:'p13_13', text:'Blue + white design consistent with app'},
+    ]
+  },
+  {
+    id:'p14', label:'Phase 14', title:'Final Polish + UX Consistency',
+    tasks:[
+      {id:'p14_1', text:'14.1 - Global visual consistency audit (all roles: customer, provider, admin, website)'},
+      {id:'p14_2', text:'14.2 - Blue + white theme enforcement everywhere'},
+      {id:'p14_3', text:'14.3 - Typography polish (consistent type scale)'},
+      {id:'p14_4', text:'14.4 - Spacing + alignment audit'},
+      {id:'p14_5', text:'14.5 - Button / CTA polish (default, loading, disabled, success, error states)'},
+      {id:'p14_6', text:'14.6 - Forms + input polish (labels, validation, errors near fields)'},
+      {id:'p14_7', text:'14.7 - Real map UX polish (tiles load, markers, controls, mobile)'},
+      {id:'p14_8', text:'14.8 - Provider trust UI polish (verified badges visually distinct)'},
+      {id:'p14_9', text:'14.9 - Diagnosis + quote UX polish (sequence is visually obvious)'},
+      {id:'p14_10', text:'14.10 - Change-order UX polish (revised quote impossible to miss, reject path clear)'},
+      {id:'p14_11', text:'14.11 - Payment / invoice polish (no alert(), clear summary)'},
+      {id:'p14_12', text:'14.12 - Service history polish (permanent service record feel)'},
+      {id:'p14_13', text:'14.13 - Empty states (every list has useful empty state with next action)'},
+      {id:'p14_14', text:'14.14 - Loading states (every async op has spinner/skeleton)'},
+      {id:'p14_15', text:'14.15 - Error + retry states (clear message, retry button, recovery)'},
+      {id:'p14_16', text:'14.16 - Success states (booking confirmed, quote accepted, payment successful, etc.)'},
+      {id:'p14_17', text:'14.17 - Accessibility audit (contrast, keyboard nav, semantic HTML, focus states)'},
+      {id:'p14_18', text:'14.18 - Mobile polish (no overflow, bottom nav, map usable, forms scroll)'},
+      {id:'p14_19', text:'14.19 - Tablet + desktop polish (dashboards, max-widths, two-column layouts)'},
+      {id:'p14_20', text:'14.20 - Microinteractions (subtle, improve understanding, not decorative)'},
+      {id:'p14_21', text:'14.21 - Content / copy consistency (same terms everywhere: Visiting Fee, Diagnosis, Quote, etc.)'},
+      {id:'p14_22', text:'14.22 - Research to product consistency audit'},
+      {id:'p14_23', text:'14.23 - Customer happy-path QA (Login -> Home -> Category -> Issue -> Map -> Provider -> ETA -> Diagnosis -> Quote -> Accept -> Revision -> Payment -> Invoice -> Rating -> History -> Book Again)'},
+      {id:'p14_24', text:'14.24 - Provider happy-path QA (Login -> Dashboard -> Accept -> Navigate -> Diagnose -> Quote -> Approval -> Complete -> Earnings)'},
+      {id:'p14_25', text:'14.25 - Admin QA (Login -> Verify Provider -> Monitor Jobs -> Coverage -> Complaint -> Evidence -> Dispute -> Resolution)'},
+      {id:'p14_26', text:'14.26 - Roadside QA (Mechanic -> Bike -> Battery -> Real Map -> Provider -> ETA -> Diagnosis -> Quote -> Repair -> Payment -> History + Emergency boundary test)'},
+      {id:'p14_27', text:'14.27 - Security QA (no exposed secrets, role isolation, safe uploads, protected routes)'},
+      {id:'p14_28', text:'14.28 - Performance QA (assets, re-renders, map loading, mobile perf)'},
+      {id:'p14_29', text:'14.29 - Code cleanup (no console.log, dead code, alert() interactions, unused imports)'},
+      {id:'p14_30', text:'14.30 - Final build + runtime check (clean start, all routes, no crashes, no broken links)'},
+    ]
+  },
+];
+
+const KEY = 'fixmate_checklist_v1';
+let state = {};
+
+function load() { try { state = JSON.parse(localStorage.getItem(KEY)||'{}'); } catch(e) { state = {}; } }
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function getS(id) { return state[id]||'none'; }
+function setS(id, s) { state[id]=s; save(); refresh(); }
+function cycle(id) {
+  const cur = getS(id);
+  setS(id, cur==='none'?'inprog':cur==='inprog'?'done':'none');
+}
+
+function taskHTML(t) {
+  const s = getS(t.id);
+  const lbl = s==='done'?'&#10003;':s==='inprog'?'~':'';
+  return `<div class="task ${s==='done'?'done':s==='inprog'?'inprog':''}" id="t${t.id}">
+    <div class="task-check" onclick="cycle('${t.id}')" title="Click to cycle status">${lbl}</div>
+    <div class="task-text">${t.text}</div>
+    <div class="task-actions">
+      <button class="task-btn prog-btn" onclick="setS('${t.id}','inprog')">~</button>
+      <button class="task-btn done-btn" onclick="setS('${t.id}','done')">&#10003;</button>
+    </div>
+  </div>`;
+}
+
+const AUDIT_HTML = `<div class="audit-box">
+  <h3>&#128203; Audit Findings (27 Sep 2026 &mdash; fixmate_prototype.html, single file, 470 lines)</h3>
+  <ul>
+    <li class="ok-item">&#10003; Tech stack: Single HTML file, vanilla JS, CSS custom properties, Inter font, Material Symbols</li>
+    <li class="ok-item">&#10003; Blue/white design system with CSS tokens &mdash; solid foundation to extend</li>
+    <li class="ok-item">&#10003; Screens: splash, home, items, request, matching, provider, tracking, quote, complete, done, history, profile</li>
+    <li class="ok-item">&#10003; Mock data: 3 categories (electronics, mechanic, plumber), 4 history entries, 3 providers</li>
+    <li class="ok-item">&#10003; Basic customer flow exists (home &rarr; category &rarr; item &rarr; request &rarr; match &rarr; provider &rarr; tracking &rarr; quote &rarr; complete &rarr; done &rarr; history)</li>
+    <li class="ok-item">&#10003; Animated provider marker in tracking screen (but SVG-only, not a real map)</li>
+    <li class="gap-item">&#10007; Map is FAKE &mdash; CSS/SVG grid lines, not real tiles. No Leaflet, no OpenStreetMap, no real coordinates.</li>
+    <li class="gap-item">&#10007; No authentication &mdash; no login or signup screens for any role</li>
+    <li class="gap-item">&#10007; No provider interface &mdash; no dashboard, no job acceptance, no quote creation</li>
+    <li class="gap-item">&#10007; No admin dashboard</li>
+    <li class="gap-item">&#10007; No real backend or data persistence (JS constants in memory only)</li>
+    <li class="gap-item">&#10007; Payment is alert() only &mdash; no real payment screen or flow</li>
+    <li class="gap-item">&#10007; Photo upload is alert() only</li>
+    <li class="gap-item">&#10007; No roadside assistance specific flow (exists as a category but no emergency boundary)</li>
+    <li class="gap-item">&#10007; No scheduled booking detail (date/time picker)</li>
+    <li class="gap-item">&#10007; No dispute / complaint flow</li>
+    <li class="gap-item">&#10007; Quote revision has no reject path &mdash; customer cannot decline the extra charge</li>
+    <li class="gap-item">&#10007; No public website</li>
+    <li class="gap-item">&#10007; No role system</li>
+    <li class="gap-item">&#10007; No route protection</li>
+    <li class="gap-item">&#10007; No empty states or error states</li>
+    <li class="gap-item">&#10007; No invoice screen</li>
+    <li class="gap-item">&#10007; No provider verification flow</li>
+  </ul>
+</div>`;
+
+function render() {
+  load();
+  const root = document.getElementById('phases-root');
+  root.innerHTML = PHASES.map(ph => `
+    <div class="phase ${ph.open?'open':''}" id="ph${ph.id}">
+      <div class="phase-header" onclick="togglePhase('ph${ph.id}')">
+        <span class="phase-badge">${ph.label}</span>
+        <span class="phase-title">${ph.title}</span>
+        <span class="phase-count" id="cnt${ph.id}"></span>
+        <span class="phase-chevron">&#9660;</span>
+      </div>
+      <div class="phase-body">
+        ${ph.audit ? AUDIT_HTML : ''}
+        <div id="tasks${ph.id}">${ph.tasks.map(taskHTML).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+  updateCounts();
+}
+
+function refresh() {
+  PHASES.forEach(ph => {
+    const cont = document.getElementById('tasks'+ph.id);
+    if(cont) cont.innerHTML = ph.tasks.map(taskHTML).join('');
+  });
+  updateCounts();
+}
+
+function updateCounts() {
+  let total=0, done=0, inprog=0;
+  PHASES.forEach(ph => {
+    let pd=0, pi=0;
+    ph.tasks.forEach(t => {
+      total++;
+      const s=getS(t.id);
+      if(s==='done'){done++;pd++;}
+      if(s==='inprog'){inprog++;pi++;}
+    });
+    const el=document.getElementById('cnt'+ph.id);
+    if(el) el.textContent = `${pd}/${ph.tasks.length} done${pi?` \xb7 ${pi} in progress`:''}`;
+  });
+  const rem = total-done-inprog;
+  const pct = total>0?Math.round((done/total)*100):0;
+  document.getElementById('pctVal').textContent = pct+'%';
+  document.getElementById('doneVal').textContent = done;
+  document.getElementById('inprogVal').textContent = inprog;
+  document.getElementById('remainVal').textContent = rem;
+  document.getElementById('totalVal').textContent = total;
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+
+function togglePhase(id) { document.getElementById(id).classList.toggle('open'); }
+
+// ── Auto-seed completed tasks ─────────────────────────────────────────
+// Only runs once (guarded by a version key). Update the version to re-seed.
+const SEED_VERSION = 'v6_fixmate_complete';
+if (localStorage.getItem('fixmate_checklist_seed') !== SEED_VERSION) {
+  load();
+  // Phase 0: Audit + Project Understanding (12/12)
+  ['p0_1','p0_2','p0_3','p0_4','p0_5','p0_6','p0_7','p0_8','p0_9','p0_10','p0_11','p0_12']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 1: Foundation / Architecture (15/15)
+  ['p1_1','p1_2','p1_3','p1_4','p1_5','p1_6','p1_7','p1_8','p1_9','p1_10','p1_11','p1_12','p1_13','p1_14','p1_15']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 2: Real Map + Location (15/15)
+  ['p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7','p2_8','p2_9','p2_10','p2_11','p2_12','p2_13','p2_14','p2_15']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 3: Customer Core MVP (26/26)
+  ['p3_1','p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','p3_9','p3_10','p3_11','p3_12','p3_13','p3_14','p3_15','p3_16','p3_17','p3_18','p3_19','p3_20','p3_21','p3_22','p3_23','p3_24','p3_25','p3_26']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 4: Provider Core MVP (28/28)
+  ['p4_1','p4_2','p4_3','p4_4','p4_5','p4_6','p4_7','p4_8','p4_9','p4_10','p4_11','p4_12','p4_13','p4_14','p4_15','p4_16','p4_17','p4_18','p4_19','p4_20','p4_21','p4_22','p4_23','p4_24','p4_25','p4_26','p4_27','p4_28']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 5: Pricing / Change-Order / Transparency (11/11)
+  ['p5_1','p5_2','p5_3','p5_4','p5_5','p5_6','p5_7','p5_8','p5_9','p5_10','p5_11']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 6: Trust / Safety / Evidence (11/11)
+  ['p6_1','p6_2','p6_3','p6_4','p6_5','p6_6','p6_7','p6_8','p6_9','p6_10','p6_11']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 7: Edge Cases & Fallbacks (13/13)
+  ['p7_1','p7_2','p7_3','p7_4','p7_5','p7_6','p7_7','p7_8','p7_9','p7_10','p7_11','p7_12','p7_13']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 8: Roadside Assistance MVP (9/9)
+  ['p8_1','p8_2','p8_3','p8_4','p8_5','p8_6','p8_7','p8_8','p8_9']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 9: Scheduled Booking (9/9)
+  ['p9_1','p9_2','p9_3','p9_4','p9_5','p9_6','p9_7','p9_8','p9_9']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 10: Payment + Invoice (6/6)
+  ['p10_1','p10_2','p10_3','p10_4','p10_5','p10_6']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 11: Service History + Retention (6/6)
+  ['p11_1','p11_2','p11_3','p11_4','p11_5','p11_6']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 12: Admin / Operations Dashboard (12/12)
+  ['p12_1','p12_2','p12_3','p12_4','p12_5','p12_6','p12_7','p12_8','p12_9','p12_10','p12_11','p12_12']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 13: Responsive Public Website (13/13)
+  ['p13_1','p13_2','p13_3','p13_4','p13_5','p13_6','p13_7','p13_8','p13_9','p13_10','p13_11','p13_12','p13_13']
+    .forEach(id => { state[id] = 'done'; });
+
+  // Phase 14: Final Polish + UX Consistency + QA (30/30)
+  ['p14_1','p14_2','p14_3','p14_4','p14_5','p14_6','p14_7','p14_8','p14_9','p14_10','p14_11','p14_12','p14_13','p14_14','p14_15','p14_16','p14_17','p14_18','p14_19','p14_20','p14_21','p14_22','p14_23','p14_24','p14_25','p14_26','p14_27','p14_28','p14_29','p14_30']
+    .forEach(id => { state[id] = 'done'; });
+
+  save();
+  localStorage.setItem('fixmate_checklist_seed', 'v6_fixmate_complete');
+}
+
+render();
+
+</script>
+</body>
+</html>
