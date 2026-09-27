@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { currentUser, login as storeLogin, logout as storeLogout, signup as storeSignup } from '../store';
 
 const AuthContext = createContext(null);

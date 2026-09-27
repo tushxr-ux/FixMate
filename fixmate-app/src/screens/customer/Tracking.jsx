@@ -77,7 +77,6 @@ export default function Tracking() {
 
     // ── Animate provider toward customer ─────────────────
     const STEPS = 60;        // total animation steps
-    const MS    = 1500;      // interval between steps (1.5s → ~90s total, we compress to 6s)
     let step = 0;
 
     intervalRef.current = setInterval(() => {

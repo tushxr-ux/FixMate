@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { getJob, saveJob, calcTotal, fmt, addNotif } from '../../store';
+import { getJob, saveJob, fmt, addNotif } from '../../store';
 import { useToast } from '../../context/ToastContext';
 import TopBar from '../../components/TopBar';
 

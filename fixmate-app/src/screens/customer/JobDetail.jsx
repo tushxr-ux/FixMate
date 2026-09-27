@@ -1,13 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { getJob, getProvider, getDisputes, fmt } from '../../store';
-import { useToast } from '../../context/ToastContext';
 import TopBar from '../../components/TopBar';
 import LineItems from '../../components/LineItems';
 
 export default function JobDetail() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
-  const toast     = useToast();
   const job       = getJob(jobId);
   const prov      = job ? getProvider(job.providerId) : null;
   const disputes  = getDisputes({ jobId });

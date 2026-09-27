@@ -13,8 +13,6 @@ export default function ProviderDashboard() {
   const [avail, setAvail] = useState(prov?.available ?? false);
   const [radius, setRadius] = useState(prov?.serviceRadius || 5);
   const [showSettings, setShowSettings] = useState(false);
-  const [idDoc, setIdDoc] = useState('');
-  const [bizDoc, setBizDoc] = useState('');
 
   const myJobs = prov ? getJobs({ providerId: prov.id }) : [];
   const incoming = myJobs.filter(j => j.status === 'matched');

@@ -37,10 +37,6 @@ export default function Complete() {
     toast.success('Payment successful! Transaction recorded.');
   }
 
-  function handleDone() {
-    navigate(`/done/${jobId}`);
-  }
-
   const METHODS = [
     { id:'upi',    label:'UPI',           icon:'account_balance' },
     { id:'card',   label:'Card',          icon:'credit_card' },
@@ -86,15 +82,19 @@ export default function Complete() {
           total={job.total}
         />
 
-        <p className="section-title" style={{ marginTop:16 }}>Payment method</p>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16 }}>
+        <p className="section-title" style={{ marginTop: 16 }}>Payment Method</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
           {METHODS.map(m => (
             <div key={m.id}
-              className={`item-card${method===m.id?' ':''}`}
-              style={{ border: method===m.id?'2px solid var(--blue)':'', background: method===m.id?'var(--blue-light)':'' }}
+              className="item-card"
+              style={{
+                border: method === m.id ? '2px solid var(--blue)' : '1.5px solid var(--border)',
+                background: method === m.id ? 'var(--blue-light)' : 'var(--surface)',
+                padding: '12px 8px'
+              }}
               onClick={() => setMethod(m.id)}>
-              <span className="material-symbols-outlined" style={{ color:'var(--blue)' }}>{m.icon}</span>
-              <span className="label">{m.label}</span>
+              <span className="material-symbols-outlined" style={{ color: 'var(--blue)' }}>{m.icon}</span>
+              <span className="label" style={{ fontWeight: method === m.id ? 700 : 500 }}>{m.label}</span>
             </div>
           ))}
         </div>

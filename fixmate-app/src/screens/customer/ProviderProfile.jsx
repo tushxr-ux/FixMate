@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProvider, getJobs, fmt, distLabel } from '../../store';
+import { getProvider, getJobs, distLabel } from '../../store';
 import TopBar from '../../components/TopBar';
-import Stars from '../../components/Stars';
 
 export default function ProviderProfile() {
   const { providerId } = useParams();

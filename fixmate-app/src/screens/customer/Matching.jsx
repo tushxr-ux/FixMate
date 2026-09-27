@@ -45,7 +45,7 @@ export default function Matching() {
     }, 2500);
 
     return () => { clearInterval(msgInterval); clearTimeout(done); };
-  }, [jobId]);
+  }, [jobId, navigate]);
 
   return (
     <div style={{ display:'flex', flexDirection:'column', flex:1 }}>

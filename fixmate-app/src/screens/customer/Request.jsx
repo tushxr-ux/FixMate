@@ -1,14 +1,12 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { createJob } from '../../store';
-import { useToast } from '../../context/ToastContext';
 import TopBar from '../../components/TopBar';
 
 export default function Request() {
   const { categoryId, itemName } = useParams();
   const navigate     = useNavigate();
   const routerLoc   = useLocation();
-  const toast        = useToast();
   const fileRef      = useRef();
 
   const [desc,    setDesc]    = useState('');
@@ -134,7 +132,7 @@ export default function Request() {
               Select Appointment Date
             </label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              {['Today', 'Tomorrow', 'Day After'].map((d, idx) => {
+              {['Today', 'Tomorrow', 'Day After'].map(d => {
                 const isSelected = schedAt.startsWith(d);
                 return (
                   <button
