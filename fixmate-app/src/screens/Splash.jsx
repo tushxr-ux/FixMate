@@ -41,7 +41,7 @@ export default function Splash() {
       }}
     >
       <img
-        src="/fixmate-logo.png"
+        src="/fixmate-logo.webp"
         alt="FixMate"
         style={{
           width: 220,
