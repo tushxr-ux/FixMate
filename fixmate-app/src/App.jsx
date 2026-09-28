@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import RequireAuth from './components/RequireAuth';
 import AppHeader from './components/AppHeader';
@@ -42,11 +42,34 @@ import AdminDashboard from './screens/admin/Dashboard';
 // Public Website
 import Website from './screens/public/Website';
 
+function isMobileDevice() {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobileUA || isSmallScreen;
+}
+
 function AppLayout() {
   const location = useLocation();
+  const { user } = useAuth();
 
-  // 1. Marketing Website (Root / or /website)
-  if (location.pathname === '/website' || location.pathname === '/') {
+  // 1. Explicit Marketing Website (accessible on all devices)
+  if (location.pathname === '/website') {
+    return <Website />;
+  }
+
+  // 2. Root Entry ('/') — Smart device-aware routing:
+  // Mobile device: open the app directly (/home if logged in, /login if not)
+  // Laptop / Desktop: open the marketing website (<Website />)
+  if (location.pathname === '/') {
+    if (isMobileDevice()) {
+      if (user) {
+        const dest = user.role === 'provider' ? '/provider' : user.role === 'admin' ? '/admin' : '/home';
+        return <Navigate to={dest} replace />;
+      }
+      return <Navigate to="/login" replace />;
+    }
     return <Website />;
   }
 
