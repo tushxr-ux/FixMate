@@ -771,14 +771,14 @@ export default function Website() {
             </h2>
 
             <p style={{ fontSize: 16, color: '#CBD5E1', lineHeight: 1.6, margin: '0 0 28px' }}>
-              Flat tire, dead battery, overheating engine, or empty fuel tank? Our mobile road mechanics carry high-output jumper cables, tyre patchers, and emergency equipment.
+              Flat tire, dead battery, overheating engine, or empty fuel tank? Our mobile road mechanics carry high-output jumper cables, tyre patchers, and tow-to-pump rescue assistance.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 32 }}>
               {[
                 { title: 'Battery Jumpstart', time: '12 min ETA', price: 'from ₹349' },
                 { title: 'Puncture & Flat Tire', time: '14 min ETA', price: 'from ₹199' },
-                { title: 'Emergency Fuel Supply', time: '18 min ETA', price: 'from ₹299' },
+                { title: 'Tow to Nearest Pump', time: '18 min ETA', price: 'from ₹299' },
                 { title: 'Flatbed Towing Truck', time: '25 min ETA', price: 'from ₹899' },
               ].map((item, idx) => (
                 <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.06)', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.1)' }}>

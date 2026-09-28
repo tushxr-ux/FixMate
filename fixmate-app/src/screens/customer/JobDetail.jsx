@@ -71,6 +71,12 @@ export default function JobDetail() {
                 </div>
               )}
             </div>
+            {/* §2.2: show logged confirmation call timestamp */}
+            {job.confirmationCall && (
+              <div style={{ marginTop: 8, padding: '6px 10px', background: 'var(--green-bg, #DCFCE7)', borderRadius: 6, fontSize: 11, color: 'var(--green, #16A34A)' }}>
+                ✓ Visit confirmed by call at {new Date(job.confirmationCall.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
           </div>
         )}
 

@@ -35,26 +35,52 @@ export default function AdminDashboard() {
     const disp = disputes.find(d => d.id === dispId);
     if (!disp) return;
 
-    const resolutionText = action === 'refund' 
-      ? 'Resolved in favor of customer. 100% refund processed.'
-      : 'Reviewed by Trust & Safety. Dispute dismissed based on service logs.';
+    // §6.4: suspension only available when prior dispute count >= threshold
+    if (action === 'suspend' && (disp.priorDisputeCount || 0) < 3) {
+      toast.warn(`Suspension requires ≥3 prior disputes. This provider has ${disp.priorDisputeCount || 0}.`);
+      return;
+    }
+
+    const resolutionMap = {
+      refund:           'Full refund approved and processed for customer.',
+      partial_refund:   'Partial refund (50%) issued. Both parties notified.',
+      provider_warning: 'Formal warning issued to provider. Dispute logged in record.',
+      rejected:         'Dispute reviewed and dismissed based on service logs.',
+      suspend:          'Provider account suspended pending review (≥3 dispute pattern).',
+    };
+
+    const statusMap = {
+      refund:           'resolved',
+      partial_refund:   'partial_refund',
+      provider_warning: 'provider_warning',
+      rejected:         'rejected',
+      suspend:          'resolved',
+    };
 
     const updated = {
       ...disp,
-      status: action === 'refund' ? 'resolved' : 'rejected',
-      resolution: resolutionText,
-      resolvedAt: Date.now()
+      status: statusMap[action] || 'resolved',
+      resolution: resolutionMap[action] || 'Resolved.',
+      resolvedAt: Date.now(),
     };
     saveDispute(updated);
 
     if (disp.customerId) {
       addNotif(disp.customerId, {
-        title: action === 'refund' ? 'Dispute Resolved — Refund Approved' : 'Dispute Reviewed',
-        text: resolutionText,
+        title: action === 'refund' ? 'Dispute Resolved — Refund Approved'
+          : action === 'partial_refund' ? 'Dispute Resolved — Partial Refund'
+          : action === 'provider_warning' ? 'Your Dispute Has Been Reviewed'
+          : 'Dispute Reviewed',
+        text: resolutionMap[action],
       });
     }
 
-    toast.success(action === 'refund' ? 'Dispute resolved & customer refunded.' : 'Dispute dismissed.');
+    if (action === 'suspend' && disp.providerId) {
+      const prov = getProvider(disp.providerId);
+      if (prov) saveProvider({ ...prov, available: false, suspended: true });
+    }
+
+    toast.success('Dispute ' + action.replace('_', ' ') + '.');
     forceUpdate(n => n + 1);
   }
 
@@ -159,6 +185,7 @@ export default function AdminDashboard() {
               disputes.map(d => {
                 const job = allJobs.find(j => j.id === d.jobId);
                 const prov = job ? getProvider(job.providerId) : null;
+                const canSuspend = (d.priorDisputeCount || 0) >= 3;
                 return (
                   <div key={d.id} className="prov-card" style={{ marginBottom: 12, border: d.status === 'under_review' ? '1.5px solid #F59E0B' : '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -167,9 +194,15 @@ export default function AdminDashboard() {
                         <span className="meta" style={{ display: 'block', fontSize: 11 }}>
                           Against {prov?.name || 'Provider'} · Ticket #{d.id}
                         </span>
+                        {/* §6.4: prior dispute pattern count */}
+                        {(d.priorDisputeCount || 0) > 0 && (
+                          <span style={{ fontSize: 11, color: d.priorDisputeCount >= 3 ? '#DC2626' : '#D97706', fontWeight: 600 }}>
+                            ⚠ {d.priorDisputeCount} prior dispute(s) against this provider{d.priorDisputeCount >= 3 ? ' — Suspension eligible' : ''}
+                          </span>
+                        )}
                       </div>
                       <span className={`badge ${d.status === 'resolved' ? 'badge-success' : d.status === 'under_review' ? 'badge-warning' : 'badge-danger'}`}>
-                        {d.status.replace('_', ' ')}
+                        {d.status.replace(/_/g, ' ')}
                       </span>
                     </div>
 
@@ -189,20 +222,36 @@ export default function AdminDashboard() {
                     )}
 
                     {d.status === 'under_review' ? (
-                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                        <button 
-                          className="btn btn-outline btn-sm" 
-                          style={{ flex: 1, borderColor: 'var(--gray)', color: 'var(--gray)' }}
-                          onClick={() => resolveDispute(d.id, 'dismiss')}
-                        >
-                          Dismiss Dispute
-                        </button>
-                        <button 
-                          className="btn btn-primary btn-sm" 
-                          style={{ flex: 1, background: 'var(--green)', borderColor: 'var(--green)' }}
-                          onClick={() => resolveDispute(d.id, 'refund')}
-                        >
-                          Approve Refund
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-primary btn-sm"
+                            style={{ flex: 1, background: 'var(--green)', borderColor: 'var(--green)' }}
+                            onClick={() => resolveDispute(d.id, 'refund')}>
+                            Full Refund
+                          </button>
+                          <button className="btn btn-outline btn-sm" style={{ flex: 1 }}
+                            onClick={() => resolveDispute(d.id, 'partial_refund')}>
+                            Partial Refund (50%)
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-outline btn-sm" style={{ flex: 1, color: '#D97706', borderColor: '#D97706' }}
+                            onClick={() => resolveDispute(d.id, 'provider_warning')}>
+                            Issue Warning
+                          </button>
+                          <button className="btn btn-outline btn-sm"
+                            style={{ flex: 1, borderColor: 'var(--gray)', color: 'var(--gray)' }}
+                            onClick={() => resolveDispute(d.id, 'rejected')}>
+                            Dismiss
+                          </button>
+                        </div>
+                        {/* §6.4: suspension only when ≥3 prior disputes */}
+                        <button
+                          className="btn btn-outline btn-sm"
+                          style={{ color: canSuspend ? '#DC2626' : 'var(--gray)', borderColor: canSuspend ? '#DC2626' : 'var(--border)', fontSize: 11 }}
+                          onClick={() => resolveDispute(d.id, 'suspend')}
+                          title={canSuspend ? 'Suspend provider (pattern threshold met)' : `Needs ≥3 prior disputes (${d.priorDisputeCount || 0} now)`}>
+                          {canSuspend ? '🚫 Suspend Provider' : `Suspend (needs ${3 - (d.priorDisputeCount||0)} more dispute(s))`}
                         </button>
                       </div>
                     ) : (

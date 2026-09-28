@@ -3,6 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
+// §6.2: sub-skill menu — flat list so provider just checks what they know
+const PROVIDER_SKILLS = [
+  'AC & Fridge repair', 'TV & electronics', 'General wiring', 'Washing machine',
+  'Microwave & oven', 'Leak & fittings', 'Blockage clearing', 'Tap fitting',
+  'Roadside & towing', 'Battery & tyre', 'Bike / car service', 'Painting', 'Carpentry',
+];
+
 export default function Signup() {
   const { signup } = useAuth();
   const toast = useToast();
@@ -14,9 +21,14 @@ export default function Signup() {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('customer');
   const [bizName, setBizName] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  function toggleSkill(s) {
+    setSelectedSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,7 +39,7 @@ export default function Signup() {
 
     setLoading(true);
     await new Promise(r => setTimeout(r, 500));
-    const result = signup({ name, email, password, phone, role, businessName: bizName });
+    const result = signup({ name, email, password, phone, role, businessName: bizName, specialties: selectedSkills });
     setLoading(false);
 
     if (result.error) { setError(result.error); return; }
@@ -246,10 +258,30 @@ export default function Signup() {
                 <input
                   id="reg-biz"
                   type="text"
-                  placeholder="e.g. Sharma Appliance &amp; Electricals"
+                  placeholder="e.g. Sharma Appliance & Electricals"
                   value={bizName}
                   onChange={e => setBizName(e.target.value)}
                 />
+              </div>
+            )}
+
+            {/* §6.2: sub-skill declaration for providers */}
+            {role === 'provider' && (
+              <div className="field">
+                <label>Your Specialties <span style={{ fontWeight:400, fontSize:11, color:'var(--gray)' }}>(select all that apply)</span></label>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:4 }}>
+                  {PROVIDER_SKILLS.map(s => (
+                    <button
+                      key={s} type="button"
+                      onClick={() => toggleSkill(s)}
+                      className={selectedSkills.includes(s) ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                      style={{ fontSize:11 }}
+                    >{s}</button>
+                  ))}
+                </div>
+                <p style={{ margin:'6px 0 0', fontSize:11, color:'var(--gray)' }}>
+                  New providers start with a 3 km service radius. This expands to {'{'}5{'}'} km after 5 jobs &amp; ≥4.0 rating.
+                </p>
               </div>
             )}
 
