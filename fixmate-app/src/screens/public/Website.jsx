@@ -43,11 +43,11 @@ export default function Website() {
   const faqs = [
     {
       q: 'How does the visiting fee work?',
-      a: 'FixMate charges a standardized ₹50 inspection fee when you approve the repair quote. If you choose to decline the repair after diagnosis, a ₹100 visiting fee applies (covers the technician\'s travel and diagnosis time). Either way, you see the full quote before committing to anything.'
+      a: 'FixMate charges a standardized ₹50 inspection fee when you approve the repair quote (or ₹99 for emergency roadside towing). If you choose to decline after on-site physical diagnosis, a visiting fee of ₹100 applies for standard home repairs, or ₹199 for towing/roadside dispatch to cover heavy recovery travel.'
     },
     {
       q: 'What happens if I decline the quote after diagnosis?',
-      a: 'You are completely free to decline! If you choose not to proceed with the repair after receiving the physical diagnosis, a ₹100 visiting fee applies. This is clearly shown before you book. No hidden charges.'
+      a: 'You are completely free to decline! If you choose not to proceed after receiving the physical diagnosis, a ₹100 visiting fee applies for standard home services (or ₹199 for vehicle towing assistance). No hidden surprise charges.'
     },
     {
       q: 'Are all FixMate technicians background verified?',
@@ -55,7 +55,7 @@ export default function Website() {
     },
     {
       q: 'How fast is the 24/7 Roadside Assistance response?',
-      a: 'Our emergency dispatch algorithm locates the nearest mobile mechanic within a 3-5 km radius. On average, roadside mechanics arrive in 12 to 18 minutes for flat tyres, battery jumpstarts, and minor towing.'
+      a: 'Our emergency dispatch algorithm locates the nearest mobile mechanic within a 3-5 km radius in Mumbai. On average, roadside mechanics arrive in 12 to 18 minutes for flat tyres, battery jumpstarts, and flatbed towing.'
     },
     {
       q: 'Is there a warranty on repairs and replacement parts?',
@@ -1021,23 +1021,23 @@ export default function Website() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
           {[
             {
-              quote: 'My washing machine broke down on a Sunday morning. The FixMate technician arrived in 18 minutes, showed me the exact broken belt, and charged only ₹50 inspection + ₹380 for the genuine belt.',
+              quote: 'My washing machine broke down on a Sunday morning. The FixMate technician arrived in 18 minutes at Thakur Village, showed me the exact broken belt, and charged only ₹50 inspection + ₹380 for the genuine belt.',
               name: 'Aditi Deshmukh',
-              location: 'Koramangala, Bengaluru',
+              location: 'Thakur Village, Kandivali East, Mumbai',
               service: 'Washing Machine Repair',
               rating: 5
             },
             {
-              quote: 'Got a tyre blowout on the highway at 11 PM. Clicked Roadside SOS and a mobile tyre mechanic arrived with a generator and patcher in 15 minutes. Absolutely life saving app!',
+              quote: 'Got a clutch failure on the highway near Thakur Complex at 11 PM. Clicked Roadside SOS and a flatbed towing truck arrived in 14 minutes. Absolutely life saving app in Mumbai!',
               name: 'Vikram Mehta',
-              location: 'Western Express Highway, Mumbai',
-              service: 'Roadside Puncture SOS',
+              location: 'Western Express Highway, Kandivali, Mumbai',
+              service: 'Roadside Towing SOS',
               rating: 5
             },
             {
-              quote: 'No arbitrary price bidding like other platforms. The technician created an itemized quote on his phone, and I only approved when I was convinced. Total peace of mind.',
+              quote: 'No arbitrary price bidding like other platforms. The technician created an itemized quote on his phone for my AC in Mahavir Nagar, and I only approved when I was convinced. Total peace of mind.',
               name: 'Pooja Iyer',
-              location: 'Indiranagar, Bengaluru',
+              location: 'Mahavir Nagar, Kandivali West, Mumbai',
               service: 'Inverter & Electrical Fix',
               rating: 5
             },

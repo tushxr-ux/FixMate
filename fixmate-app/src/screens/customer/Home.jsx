@@ -46,7 +46,7 @@ export default function Home() {
               style={{ alignSelf: 'flex-start' }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--blue)' }}>location_on</span>
-              <span>Bengaluru Central</span>
+              <span>Thakur Village, Kandivali</span>
             </div>
           </div>
 

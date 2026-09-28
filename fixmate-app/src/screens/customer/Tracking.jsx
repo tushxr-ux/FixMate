@@ -6,8 +6,8 @@ import { customerIcon, makeProviderIcon, makeEtaIcon } from '../../components/Ma
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
 
-// Mumbai customer location (replaced by real GPS in Phase 3 location flow)
-const CUSTOMER_LATLNG = [19.1376, 72.8289];
+// Mumbai customer location (Thakur Village, Kandivali East)
+const DEFAULT_CUSTOMER_LATLNG = [19.2085, 72.8735];
 
 // Interpolate between two [lat,lng] points by fraction t ∈ [0,1]
 function lerp([lat1, lng1], [lat2, lng2], t) {
@@ -20,6 +20,8 @@ export default function Tracking() {
   const job       = getJob(jobId);
   const provider  = job ? getProvider(job.providerId) : null;
 
+  const CUSTOMER_LATLNG = job?.location?.lat ? [job.location.lat, job.location.lng] : DEFAULT_CUSTOMER_LATLNG;
+
   const mapDivRef    = useRef(null);
   const mapRef       = useRef(null);
   const provMarker   = useRef(null);
@@ -30,10 +32,10 @@ export default function Tracking() {
   const [eta,     setEta]     = useState(6);
   const [arrived, setArrived] = useState(false);
 
-  // Provider start position — use seed coords if available, else offset from customer
+  // Provider start position — use seed coords if available, else offset from customer in Kandivali
   const provStart = provider?.lat
     ? [provider.lat, provider.lng]
-    : [19.148, 72.840];
+    : [19.2062, 72.8710];
 
   useEffect(() => {
     if (!mapDivRef.current || mapRef.current) return;

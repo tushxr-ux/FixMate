@@ -325,7 +325,7 @@ export default function AdminDashboard() {
         {/* TAB 5: Coverage Gaps View */}
         {activeTab === 'coverage' && (
           <div>
-            <p className="section-title">Hyperlocal Coverage Analysis (Andheri West, Mumbai)</p>
+            <p className="section-title">Hyperlocal Coverage Analysis (Kandivali &amp; Thakur Village, Mumbai)</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {CATEGORIES.map(cat => {
                 const activeInCat = allProvs.filter(p => p.categories.includes(cat.id) && p.available);

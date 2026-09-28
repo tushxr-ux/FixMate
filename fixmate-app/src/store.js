@@ -5,19 +5,51 @@
 
 export const Config = {
   appName:                    'FixMate',
-  version:                    '1.0.0',
+  version:                    '1.1.0',
   env:                        'development',
-  visitingFee:                50,  // Default shown before decision
-  visitingFeeAccept:          50,  // Section 5.3: ₹50 when repair proceeds
-  visitingFeeDecline:         100, // Section 5.3: ₹100 if customer declines repair post-diagnosis
+  visitingFee:                50,  // Standard default shown before decision
+  visitingFeeAccept:          50,  // Standard: ₹50 when repair proceeds
+  visitingFeeDecline:         100, // Standard: ₹100 if customer declines repair post-diagnosis
+  towingVisitingFeeAccept:    99,  // Towing/Roadside: ₹99 when customer accepts service
+  towingVisitingFeeDecline:   199, // Towing/Roadside: ₹199 if customer declines after diagnosis
   maxRevisions:               3,   // Section 5.4: capped at 3 revisions
   defaultRadius:              5,   // km
   newProviderRadius:          3,   // Section 6.2: capped visibility radius for new providers
   newProviderJobThreshold:    5,   // Section 6.2: jobs needed to graduate
   newProviderRatingThreshold: 4.0, // Section 6.2: rating needed to graduate
   disputeSuspensionThreshold: 3,   // Section 6.4: pattern threshold before suspension
+  defaultCity:                'Mumbai',
+  defaultArea:                'Thakur Village, Kandivali East',
+  defaultCoordinates:         { lat: 19.2085, lng: 72.8735 },
   NS:                         'fm_',
 };
+
+/* ── Visiting Fee Helper (Towing: ₹99 accept / ₹199 decline) ── */
+export function getVisitingFees(jobOrCategory) {
+  let isTowing = false;
+  if (typeof jobOrCategory === 'string') {
+    isTowing = ['roadside', 'towing', 'tow'].includes(jobOrCategory.toLowerCase());
+  } else if (jobOrCategory && typeof jobOrCategory === 'object') {
+    const cat = (jobOrCategory.category || '').toLowerCase();
+    const item = (jobOrCategory.item || '').toLowerCase();
+    const issue = (jobOrCategory.issue || '').toLowerCase();
+    isTowing = cat === 'roadside' || item.includes('tow') || item.includes('puncture') || item.includes('jumpstart') || item.includes('battery') || issue.includes('tow');
+  }
+
+  if (isTowing) {
+    return {
+      accept: Config.towingVisitingFeeAccept,   // ₹99
+      decline: Config.towingVisitingFeeDecline, // ₹199
+      default: Config.towingVisitingFeeAccept,  // ₹99
+    };
+  }
+
+  return {
+    accept: Config.visitingFeeAccept,   // ₹50
+    decline: Config.visitingFeeDecline, // ₹100
+    default: Config.visitingFee,        // ₹50
+  };
+}
 
 /* ── localStorage helpers ─────────────────── */
 const persist = (key, data) => {
@@ -31,110 +63,324 @@ const recall = (key, fallback = null) => {
 };
 const drop = (key) => localStorage.removeItem(Config.NS + key);
 
-/* ── Seed data ────────────────────────────── */
+/* ── Seed data (Mumbai, Kandivali & Thakur Village) ── */
 const SEED_USERS = [
-  { id:'u1', name:'Aditi Sharma',  email:'aditi@demo.com',      password:'demo',
-    phone:'+91 98765 43210', role:'customer', avatar:'AS', address:'Andheri West, Mumbai',
-    wallet: { balance: 500, holds: [] } },
-  { id:'u2', name:'Rakesh Kumar',  email:'rakesh@demo.com',      password:'demo',
-    phone:'+91 99887 12345', role:'provider', avatar:'RK', address:'Andheri East, Mumbai',
-    wallet: { balance: 500, holds: [] } },
-  { id:'u3', name:'Admin User',    email:'admin@fixmate.com',    password:'admin',
-    phone:'+91 00000 00000', role:'admin',    avatar:'AD', address:'FixMate HQ, Mumbai',
-    wallet: { balance: 500, holds: [] } },
+  {
+    id: 'u1',
+    name: 'Aditi Sharma',
+    email: 'aditi@demo.com',
+    password: 'demo',
+    phone: '+91 98765 43210',
+    role: 'customer',
+    avatar: 'AS',
+    address: 'Flat 402, Evershine Millennium Paradise, Thakur Village, Kandivali East, Mumbai',
+    wallet: { balance: 500, holds: [] },
+  },
+  {
+    id: 'u2',
+    name: 'Rakesh Kumar',
+    email: 'rakesh@demo.com',
+    password: 'demo',
+    phone: '+91 99887 12345',
+    role: 'provider',
+    avatar: 'RK',
+    address: 'Shop 12, Thakur Arcade, Opp. D-Mart, Thakur Village, Kandivali East, Mumbai',
+    wallet: { balance: 850, holds: [] },
+  },
+  {
+    id: 'u3',
+    name: 'Admin User',
+    email: 'admin@fixmate.com',
+    password: 'admin',
+    phone: '+91 00000 00000',
+    role: 'admin',
+    avatar: 'AD',
+    address: 'FixMate Ops Hub, Western Edge II, Borivali-Kandivali WEH, Mumbai',
+    wallet: { balance: 5000, holds: [] },
+  },
+  {
+    id: 'u4',
+    name: 'Rohan Mehta',
+    email: 'rohan.mehta@gmail.com',
+    password: 'demo',
+    phone: '+91 98201 55432',
+    role: 'customer',
+    avatar: 'RM',
+    address: 'Wing C, Panchsheel Heights, Mahavir Nagar, Kandivali West, Mumbai',
+    wallet: { balance: 350, holds: [] },
+  },
 ];
 
 const SEED_PROVIDERS = [
   {
-    id:'prov1', userId:'u2', name:'Rakesh Kumar Electricals', init:'RK',
-    specialties:['AC & Fridge repair','General wiring','TV repair'],
-    rating:4.7, totalJobs:128, distKm:1.4,
-    verified:true, idVerified:true, bizVerified:true, available:true,
-    lat:19.1376, lng:72.8289, categories:['electronics'],
-    serviceRadius:5, newProvider:false, cancellations:2, noShows:0,
+    id: 'prov1',
+    userId: 'u2',
+    name: 'Rakesh Kumar Electricals & AC Care',
+    init: 'RK',
+    specialties: ['Inverter Split AC Servicing', 'Double Door Refrigerator Repair', 'Home Wiring & MCB Tripping', 'Smart LED TV Repair'],
+    rating: 4.8,
+    totalJobs: 215,
+    distKm: 0.4,
+    verified: true,
+    idVerified: true,
+    bizVerified: true,
+    available: true,
+    lat: 19.2094,
+    lng: 72.8742,
+    area: 'Thakur Village, Kandivali East',
+    address: 'Shop 12, Thakur Arcade, Opp. D-Mart, Thakur Village, Kandivali East, Mumbai',
+    categories: ['electronics'],
+    serviceRadius: 5,
+    newProvider: false,
+    cancellations: 1,
+    noShows: 0,
   },
   {
-    id:'prov2', userId:'p_s2', name:'Suresh Auto Garage', init:'SA',
-    specialties:['Roadside & towing','Two-wheeler & car','Battery & tyre'],
-    rating:4.5, totalJobs:96, distKm:2.1,
-    verified:true, idVerified:true, bizVerified:false, available:true,
-    lat:19.1356, lng:72.8305, categories:['mechanic','roadside'],
-    serviceRadius:8, newProvider:false, cancellations:4, noShows:1,
+    id: 'prov2',
+    userId: 'p_s2',
+    name: 'Kandivali 24/7 Roadside SOS & Towing',
+    init: 'KR',
+    specialties: ['24/7 Car & Bike Flatbed Towing', 'Highway Battery Jumpstart', 'Tubeless Puncture Patching', 'Tow to Nearest Petrol Pump'],
+    rating: 4.9,
+    totalJobs: 412,
+    distKm: 0.7,
+    verified: true,
+    idVerified: true,
+    bizVerified: true,
+    available: true,
+    lat: 19.2062,
+    lng: 72.8710,
+    area: 'Western Express Highway, Kandivali East',
+    address: 'Highway Service Bay, Near Thakur Complex Flyover, WEH, Kandivali East, Mumbai',
+    categories: ['mechanic', 'roadside'],
+    serviceRadius: 10,
+    newProvider: false,
+    cancellations: 2,
+    noShows: 0,
   },
   {
-    id:'prov3', userId:'p_s3', name:'Iqbal Plumbing Works', init:'IP',
-    specialties:['Leak & fittings','Blockage clearing'],
-    rating:4.8, totalJobs:74, distKm:0.9,
-    verified:false, idVerified:true, bizVerified:false, available:true,
-    lat:19.1390, lng:72.8275, categories:['plumber'],
-    serviceRadius:3, newProvider:false, cancellations:0, noShows:0,
+    id: 'prov3',
+    userId: 'p_s3',
+    name: 'Iqbal Plumbing & Sanitary Works',
+    init: 'IP',
+    specialties: ['Concealed Pipe Leakage', 'RO & Water Filter Installation', 'Bathroom Drain Jetting', 'Mixer Tap & Flush Tank Overhaul'],
+    rating: 4.8,
+    totalJobs: 168,
+    distKm: 0.6,
+    verified: true,
+    idVerified: true,
+    bizVerified: false,
+    available: true,
+    lat: 19.2078,
+    lng: 72.8722,
+    area: 'Thakur Complex, Kandivali East',
+    address: 'Shop 4, Gayatri Satsang Bldg, Thakur Complex, Kandivali East, Mumbai',
+    categories: ['plumber'],
+    serviceRadius: 4,
+    newProvider: false,
+    cancellations: 0,
+    noShows: 0,
   },
   {
-    id:'prov4', userId:'p_s4', name:'Meena Appliance Care', init:'MA',
-    specialties:['Washing machine','Microwave','Fridge repair'],
-    rating:4.3, totalJobs:45, distKm:3.2,
-    verified:false, idVerified:false, bizVerified:false, available:false,
-    lat:19.1345, lng:72.8320, categories:['electronics'],
-    serviceRadius:4, newProvider:false, cancellations:1, noShows:0,
+    id: 'prov4',
+    userId: 'p_s4',
+    name: 'Mahavir Nagar Appliance Care Centre',
+    init: 'MA',
+    specialties: ['Front & Top Load Washing Machine', 'Microwave Magnetron Fix', 'Refrigerator Gas Refill'],
+    rating: 4.7,
+    totalJobs: 134,
+    distKm: 1.8,
+    verified: true,
+    idVerified: true,
+    bizVerified: false,
+    available: true,
+    lat: 19.2068,
+    lng: 72.8365,
+    area: 'Mahavir Nagar, Kandivali West',
+    address: 'Shop 7, Panchsheel Heights, Mahavir Nagar, Kandivali West, Mumbai',
+    categories: ['electronics'],
+    serviceRadius: 6,
+    newProvider: false,
+    cancellations: 1,
+    noShows: 0,
   },
   {
-    id:'prov5', userId:'p_s5', name:'Vikas Electric Works (New)', init:'VE',
-    specialties:['General wiring','Switchboard repair','Fan & light fittings'],
-    rating:4.2, totalJobs:2, distKm:1.8,
-    verified:false, idVerified:true, bizVerified:false, available:true,
-    lat:19.1380, lng:72.8290, categories:['electronics'],
-    serviceRadius:3, newProvider:true, visibilityCap:3, cancellations:0, noShows:0,
+    id: 'prov5',
+    userId: 'p_s5',
+    name: 'Charkop Moto Clinic & Scooter Rescue',
+    init: 'CM',
+    specialties: ['Scooter & Motorcycle Full Service', 'On-spot Breakdown & Towing', 'Brake Pad & Clutch Cable Replacement'],
+    rating: 4.6,
+    totalJobs: 92,
+    distKm: 2.3,
+    verified: true,
+    idVerified: true,
+    bizVerified: false,
+    available: true,
+    lat: 19.2165,
+    lng: 72.8295,
+    area: 'Charkop Sector 8, Kandivali West',
+    address: 'Sector 8 Market, Near Charkop Police Station, Kandivali West, Mumbai',
+    categories: ['mechanic', 'roadside'],
+    serviceRadius: 6,
+    newProvider: false,
+    cancellations: 2,
+    noShows: 0,
+  },
+  {
+    id: 'prov6',
+    userId: 'p_s6',
+    name: 'Evershine Quick Fix Electricals (New)',
+    init: 'EQ',
+    specialties: ['Ceiling Fan & Exhaust Fitting', 'Smart Switchboard Wiring', 'LED Strip & Chandelier Installation'],
+    rating: 4.4,
+    totalJobs: 3,
+    distKm: 0.3,
+    verified: false,
+    idVerified: true,
+    bizVerified: false,
+    available: true,
+    lat: 19.2115,
+    lng: 72.8760,
+    area: 'Evershine Dream Park, Thakur Village, Kandivali East',
+    address: 'Opp. Dream Park Main Gate, Thakur Village, Kandivali East, Mumbai',
+    categories: ['electronics'],
+    serviceRadius: 3,
+    newProvider: true,
+    visibilityCap: 3,
+    cancellations: 0,
+    noShows: 0,
+  },
+  {
+    id: 'prov7',
+    userId: 'p_s7',
+    name: 'Akurli Fast Towing & Mobile Garage',
+    init: 'AF',
+    specialties: ['Highway Towing Assistance', 'Monsoon Waterlogged Car Rescue', 'Jumpstart & Alternator Test'],
+    rating: 4.8,
+    totalJobs: 280,
+    distKm: 1.2,
+    verified: true,
+    idVerified: true,
+    bizVerified: true,
+    available: true,
+    lat: 19.2038,
+    lng: 72.8655,
+    area: 'Akurli Road, Kandivali East',
+    address: 'Near Growel\'s 101 Mall, Akurli Road, Kandivali East, Mumbai',
+    categories: ['mechanic', 'roadside'],
+    serviceRadius: 8,
+    newProvider: false,
+    cancellations: 1,
+    noShows: 0,
   },
 ];
 
 const SEED_JOBS = [
   {
-    id:'job1', customerId:'u1', providerId:'prov1',
-    category:'electronics', item:'Washing Machine', issue:'Not spinning',
-    status:'completed', visitingFee:50,
-    parts:[{name:'Drive belt',cost:200}], labour:200, addOns:[], total:450,
-    date:'12 Sep 2026', rating:5, createdAt:1757000000000,
-    diagnosis:'Drive belt was worn out — replaced with OEM part.',
-    diagnosisNotes:'Drum not rotating; belt snapped.', evidence:[], revisions:[], quoteAccepted:true,
+    id: 'job1',
+    customerId: 'u1',
+    providerId: 'prov1',
+    category: 'electronics',
+    item: 'Inverter Split AC',
+    issue: 'Cooling gas leak & filter deep clean',
+    status: 'completed',
+    visitingFee: 50,
+    parts: [{ name: 'Eco-R32 Gas Refill', cost: 350 }, { name: 'Copper Flare Nut', cost: 50 }],
+    labour: 250,
+    addOns: [],
+    total: 700,
+    date: '24 Sep 2026',
+    rating: 5,
+    createdAt: 1757000000000,
+    diagnosis: 'Flare nut was loose causing slow refrigerant leakage. Pressurized, tightened, and refilled R32 gas to 125 PSI.',
+    diagnosisNotes: 'Indoor cooling coil washed; subcooling reading optimal.',
+    evidence: [],
+    revisions: [],
+    quoteAccepted: true,
+    location: { address: 'Flat 402, Evershine Millennium Paradise, Thakur Village, Kandivali East, Mumbai', lat: 19.2085, lng: 72.8735 },
   },
   {
-    id:'job2', customerId:'u1', providerId:'prov2',
-    category:'mechanic', item:'Bike', issue:'Battery dead',
-    status:'completed', visitingFee:50,
-    parts:[], labour:200, addOns:[], total:250,
-    date:'02 Sep 2026', rating:4, createdAt:1756900000000,
-    diagnosis:'Battery fully discharged — jumpstarted and tested.',
-    diagnosisNotes:'', evidence:[], revisions:[], quoteAccepted:true,
+    id: 'job2',
+    customerId: 'u1',
+    providerId: 'prov2',
+    category: 'roadside',
+    item: 'Car — Towing to Garage',
+    issue: 'ROAD SERVICE: Clutch cable snapped near Thakur Complex Flyover, WEH highway. Flatbed tow required.',
+    status: 'completed',
+    visitingFee: 99, // Towing accepted: ₹99
+    parts: [],
+    labour: 700,
+    addOns: [],
+    total: 799,
+    date: '18 Sep 2026',
+    rating: 5,
+    createdAt: 1756900000000,
+    diagnosis: 'Vehicle towed securely via flatbed from Western Express Highway to Kandivali West service station.',
+    diagnosisNotes: 'Safely loaded using hydraulic winch and wheel chocks.',
+    evidence: [],
+    revisions: [],
+    quoteAccepted: true,
+    location: { address: 'Western Express Highway, Near Thakur Complex, Kandivali East, Mumbai', lat: 19.2062, lng: 72.8710 },
   },
   {
-    id:'job3', customerId:'u1', providerId:'prov3',
-    category:'plumber', item:'Kitchen tap', issue:'Dripping leak',
-    status:'completed', visitingFee:50,
-    parts:[{name:'Washer',cost:30}], labour:220, addOns:[], total:300,
-    date:'27 Aug 2026', rating:5, createdAt:1756800000000,
-    diagnosis:'Worn washer replaced. Tap sealed.',
-    diagnosisNotes:'', evidence:[], revisions:[], quoteAccepted:true,
+    id: 'job3',
+    customerId: 'u1',
+    providerId: 'prov3',
+    category: 'plumber',
+    item: 'Kitchen Mixer Tap',
+    issue: 'Severe water leakage beneath sink counter',
+    status: 'completed',
+    visitingFee: 50,
+    parts: [{ name: 'Brass Spindle Washer', cost: 40 }, { name: 'PTFE Teflon Thread Tape', cost: 20 }],
+    labour: 240,
+    addOns: [],
+    total: 350,
+    date: '08 Sep 2026',
+    rating: 5,
+    createdAt: 1756800000000,
+    diagnosis: 'Worn out silicone spindle washer replaced. Teflon sealed and pressure tested.',
+    diagnosisNotes: 'Cleaned aerator mesh as complimentary goodwill.',
+    evidence: [],
+    revisions: [],
+    quoteAccepted: true,
+    location: { address: 'Thakur Village, Kandivali East, Mumbai', lat: 19.2090, lng: 72.8740 },
   },
   {
-    id:'job4', customerId:'u1', providerId:'prov4',
-    category:'electronics', item:'Microwave', issue:'Not heating',
-    status:'cancelled_by_customer', visitingFee:100,
-    parts:[], labour:0, addOns:[], total:100,
-    date:'14 Aug 2026', rating:0, createdAt:1756700000000,
-    diagnosis:'Magnetron replacement quoted — customer declined.',
-    diagnosisNotes:'', evidence:[], revisions:[], quoteAccepted:false,
+    id: 'job4',
+    customerId: 'u1',
+    providerId: 'prov2',
+    category: 'roadside',
+    item: 'Car — Heavy Towing',
+    issue: 'Vehicle breakdown on Akurli Road',
+    status: 'cancelled_by_customer',
+    visitingFee: 199, // Towing declined: ₹199
+    parts: [],
+    labour: 0,
+    addOns: [],
+    total: 199,
+    date: '28 Aug 2026',
+    rating: 0,
+    createdAt: 1756700000000,
+    diagnosis: 'Customer decided to have family member assist with spare vehicle. Inspection fee applied per Section 5.3.',
+    diagnosisNotes: '',
+    evidence: [],
+    revisions: [],
+    quoteAccepted: false,
+    location: { address: 'Akurli Road, Kandivali East, Mumbai', lat: 19.2038, lng: 72.8655 },
   },
 ];
 
 /* ── Init (seed once) ─────────────────────── */
 export function initStore() {
-  if (!recall('seeded')) {
+  if (!recall('seeded_mumbai_kandivali_v2')) {
     persist('users',     SEED_USERS);
     persist('providers', SEED_PROVIDERS);
     persist('jobs',      SEED_JOBS);
-    persist('seeded',    true);
+    persist('seeded_mumbai_kandivali_v2', true);
   }
 }
+
 
 /* ── Auth ─────────────────────────────────── */
 export function login(email, password) {
@@ -227,6 +473,12 @@ export function saveJob(job) {
 export function createJob(data) {
   const user = currentUser();
   if (!user) return null;
+  const fees = getVisitingFees({ category: data.category, item: data.item, issue: data.issue });
+  const defaultLoc = {
+    address: 'Flat 402, Evershine Millennium Paradise, Thakur Village, Kandivali East, Mumbai',
+    lat: 19.2085,
+    lng: 72.8735,
+  };
   const job = {
     id: 'job' + Date.now(),
     customerId: user.id,
@@ -237,12 +489,12 @@ export function createJob(data) {
     mode: data.mode || 'immediate',
     scheduledTime: data.scheduledTime || null,
     status: 'pending',
-    visitingFee: Config.visitingFee,
+    visitingFee: fees.default,
     parts: [], labour: 0, addOns: [],
-    total: Config.visitingFee,
+    total: fees.default,
     date: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
     rating: 0, diagnosis: '', diagnosisNotes: '', evidence: [],
-    revisions: [], location: data.location || null, quoteAccepted: false,
+    revisions: [], location: data.location || defaultLoc, quoteAccepted: false,
     createdAt: Date.now(),
   };
   return saveJob(job);

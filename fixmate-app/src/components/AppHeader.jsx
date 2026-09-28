@@ -37,7 +37,7 @@ export default function AppHeader() {
               title="Click to change service location"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--blue)' }}>location_on</span>
-              <span style={{ fontWeight: 600 }}>Bengaluru Central</span>
+              <span style={{ fontWeight: 600 }}>Thakur Village, Kandivali</span>
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#94A3B8' }}>expand_more</span>
             </div>
           )}

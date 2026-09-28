@@ -95,7 +95,7 @@ export async function reverseGeocode(lat, lng) {
     providerTrack true = animate first provider marker along polyline
 */
 const MapView = forwardRef(function MapView(
-  { center = [19.137, 72.829], zoom = 15, height = '260px', style = {},
+  { center = [19.2085, 72.8735], zoom = 15, height = '260px', style = {},
     markers = [], onClick, onReady, circles = [], polyline, className = '' },
   ref
 ) {
