@@ -3,7 +3,7 @@
    Uses DivIcon for all markers (no asset path issues with Vite).
    Reverse geocoding via free Nominatim API (no key required).
    ─────────────────────────────────────────────────────────── */
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -108,8 +108,26 @@ const MapView = forwardRef(function MapView(
     flyTo:   (latlng, z) => mapRef.current?.flyTo(latlng, z ?? zoom),
   }));
 
+  const [inView, setInView] = useState(false);
+
   useEffect(() => {
-    if (!divRef.current || mapRef.current) return;
+    if (!divRef.current) return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '120px' });
+    observer.observe(divRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView || !divRef.current || mapRef.current) return;
 
     const map = L.map(divRef.current, {
       center,
@@ -130,7 +148,7 @@ const MapView = forwardRef(function MapView(
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [inView]);
 
   // Sync markers
   const markerRefs = useRef({});

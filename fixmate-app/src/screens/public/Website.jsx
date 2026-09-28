@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { CATEGORIES } from '../../store';
+import LazySection from '../../components/LazySection';
 
 export default function Website() {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ export default function Website() {
             style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
           >
             <img
-              src="/fixmate-logo.png"
+              src="/fixmate-logo.webp"
               alt="FixMate Logo"
               style={{ height: 38, width: 'auto', objectFit: 'contain' }}
             />
@@ -658,259 +659,265 @@ export default function Website() {
       </section>
 
       {/* ── How It Works Section ───────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 54 }}>
-          <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Transparent 4-Step Process
-          </span>
-          <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
-            How FixMate Works
-          </h2>
-          <p style={{ color: '#64748B', fontSize: 16, maxWidth: 540, margin: '0 auto' }}>
-            From distress to resolved in under an hour with complete itemized clarity.
-          </p>
-        </div>
+      <LazySection minHeight={420}>
+        <section id="how-it-works" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 54 }}>
+            <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Transparent 4-Step Process
+            </span>
+            <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
+              How FixMate Works
+            </h2>
+            <p style={{ color: '#64748B', fontSize: 16, maxWidth: 540, margin: '0 auto' }}>
+              From distress to resolved in under an hour with complete itemized clarity.
+            </p>
+          </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 20
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 20
+          }}>
+            {[
+              {
+                step: '01',
+                title: 'Request & Match',
+                desc: 'Select your damaged item or breakdown issue. Our hyperlocal engine matches the closest verified technician in 60 seconds.',
+                icon: 'search'
+              },
+              {
+                step: '02',
+                title: 'Live GPS Arrival',
+                desc: 'Track your technician on our interactive map with real-time ETA updates. No guessing when they will arrive.',
+                icon: 'location_on'
+              },
+              {
+                step: '03',
+                title: 'Photo Diagnosis',
+                desc: 'The technician arrives, inspects the problem, uploads proof photos, and prepares a digital breakdown of parts & labor.',
+                icon: 'camera_alt'
+              },
+              {
+                step: '04',
+                title: 'Escrow Payment',
+                desc: 'Review and approve the quote on your phone. Funds are held safely in escrow and only disbursed when you are satisfied.',
+                icon: 'verified'
+              },
+            ].map((s, idx) => (
+              <div
+                key={idx}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  borderRadius: 18,
+                  padding: 24,
+                  position: 'relative',
+                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.03)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 16
+                }}>
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: '#EFF6FF',
+                    color: '#1A56DB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 26 }}>{s.icon}</span>
+                  </div>
+                  <span style={{ fontSize: 28, fontWeight: 900, color: '#E2E8F0' }}>{s.step}</span>
+                </div>
+                <h4 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: '#0F172A' }}>{s.title}</h4>
+                <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </LazySection>
+
+      {/* ── 24/7 Roadside SOS Section ──────────────────────────── */}
+      <LazySection minHeight={500}>
+        <section id="roadside" style={{
+          padding: '72px 20px',
+          background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
+          color: '#FFFFFF'
         }}>
-          {[
-            {
-              step: '01',
-              title: 'Request & Match',
-              desc: 'Select your damaged item or breakdown issue. Our hyperlocal engine matches the closest verified technician in 60 seconds.',
-              icon: 'search'
-            },
-            {
-              step: '02',
-              title: 'Live GPS Arrival',
-              desc: 'Track your technician on our interactive map with real-time ETA updates. No guessing when they will arrive.',
-              icon: 'location_on'
-            },
-            {
-              step: '03',
-              title: 'Photo Diagnosis',
-              desc: 'The technician arrives, inspects the problem, uploads proof photos, and prepares a digital breakdown of parts & labor.',
-              icon: 'camera_alt'
-            },
-            {
-              step: '04',
-              title: 'Escrow Payment',
-              desc: 'Review and approve the quote on your phone. Funds are held safely in escrow and only disbursed when you are satisfied.',
-              icon: 'verified'
-            },
-          ].map((s, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: '#FFFFFF',
-                border: '1.5px solid #E2E8F0',
-                borderRadius: 18,
-                padding: 24,
-                position: 'relative',
-                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.03)'
-              }}
-            >
+          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 40, alignItems: 'center' }}>
+            <div>
               <div style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                gap: 8,
+                padding: '6px 14px',
+                borderRadius: 9999,
+                background: 'rgba(220, 38, 38, 0.2)',
+                border: '1px solid #DC2626',
+                color: '#FCA5A5',
+                fontSize: 12,
+                fontWeight: 800,
                 marginBottom: 16
               }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#EF4444' }}>emergency</span>
+                24/7 RAPID DISPATCH SQUAD
+              </div>
+
+              <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 16px' }}>
+                Stranded on the Road?<br />
+                <span style={{ color: '#F87171' }}>Help Arrives in 15 Minutes.</span>
+              </h2>
+
+              <p style={{ fontSize: 16, color: '#CBD5E1', lineHeight: 1.6, margin: '0 0 28px' }}>
+                Flat tire, dead battery, overheating engine, or empty fuel tank? Our mobile road mechanics carry high-output jumper cables, tyre patchers, and tow-to-pump rescue assistance.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 32 }}>
+                {[
+                  { title: 'Battery Jumpstart', time: '12 min ETA', price: 'from ₹349' },
+                  { title: 'Puncture & Flat Tire', time: '14 min ETA', price: 'from ₹199' },
+                  { title: 'Tow to Nearest Pump', time: '18 min ETA', price: 'from ₹299' },
+                  { title: 'Flatbed Towing Truck', time: '25 min ETA', price: 'from ₹899' },
+                ].map((item, idx) => (
+                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.06)', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <strong style={{ fontSize: 14, display: 'block', color: '#FFFFFF' }}>{item.title}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+                      <span>{item.time}</span>
+                      <span style={{ color: '#34D399', fontWeight: 600 }}>{item.price}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => launchApp('/emergency')}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: 12,
+                  background: '#DC2626',
+                  color: '#FFFFFF',
+                  fontSize: 16,
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  boxShadow: '0 8px 24px rgba(220, 38, 38, 0.45)'
+                }}
+              >
+                <span className="material-symbols-outlined">car_crash</span>
+                <span>Trigger Roadside Emergency SOS</span>
+              </button>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: 20,
+              padding: 30,
+              backdropFilter: 'blur(8px)'
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', color: '#FFFFFF' }}>
+                Why Drivers Rely on FixMate Roadside
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {[
+                  { title: 'Instant Live GPS Tracking', desc: 'Watch your mechanic navigate towards your exact highway kilometer stone.' },
+                  { title: 'No Toll/Surge Ambiguity', desc: 'Clear distance-based quote shown in the app before dispatch confirms.' },
+                  { title: 'Night-Shift Certified Mechanics', desc: 'On patrol 24 hours a day, 7 days a week, including monsoon emergencies.' },
+                  { title: 'Emergency Contact Alert', desc: 'Optionally ping your emergency contact with live tracking coordinates.' },
+                ].map((pt, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 14, marginBottom: 20, alignItems: 'flex-start' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EF4444', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>check</span>
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: 15, color: '#FFFFFF', display: 'block' }}>{pt.title}</strong>
+                      <span style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5 }}>{pt.desc}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      </LazySection>
+
+      {/* ── FixMate Escrow Guarantee ───────────────────────────── */}
+      <LazySection minHeight={380}>
+        <section id="guarantee" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <span style={{ color: '#059669', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Consumer Protection
+            </span>
+            <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
+              The FixMate Escrow Shield
+            </h2>
+            <p style={{ color: '#64748B', fontSize: 16, maxWidth: 580, margin: '0 auto' }}>
+              Your money stays in our secure digital escrow vault until you test your repaired device and sign off.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20 }}>
+            {[
+              {
+                icon: 'lock',
+                title: 'Digital Escrow Vault',
+                desc: 'Payment is pre-authorized but never released to the technician until you mark the job as verified.'
+              },
+              {
+                icon: 'security',
+                title: '30-Day Service Warranty',
+                desc: 'If any repaired component fails within 30 calendar days, we dispatch a senior inspector free of charge.'
+              },
+              {
+                icon: 'support_agent',
+                title: 'Rapid Dispute Mediation',
+                desc: 'Disagree on a diagnostic charge? FixMate admins review uploaded photo evidence and resolve within 2 hours.'
+              },
+              {
+                icon: 'verified_user',
+                title: 'Damage Insurance',
+                desc: 'Up to ₹10,000 accidental property damage coverage during every on-premise technician service call.'
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1.5px solid #A7F3D0',
+                  borderRadius: 18,
+                  padding: 24,
+                  boxShadow: '0 4px 14px rgba(5, 150, 105, 0.06)'
+                }}
+              >
                 <div style={{
                   width: 48,
                   height: 48,
                   borderRadius: 12,
-                  background: '#EFF6FF',
-                  color: '#1A56DB',
+                  background: '#ECFDF5',
+                  color: '#059669',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  marginBottom: 16
                 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 26 }}>{s.icon}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 26 }}>{item.icon}</span>
                 </div>
-                <span style={{ fontSize: 28, fontWeight: 900, color: '#E2E8F0' }}>{s.step}</span>
+                <h4 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px', color: '#0F172A' }}>{item.title}</h4>
+                <p style={{ fontSize: 14, color: '#64748B', margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
               </div>
-              <h4 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: '#0F172A' }}>{s.title}</h4>
-              <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 24/7 Roadside SOS Section ──────────────────────────── */}
-      <section id="roadside" style={{
-        padding: '72px 20px',
-        background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
-        color: '#FFFFFF'
-      }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 40, alignItems: 'center' }}>
-          <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 14px',
-              borderRadius: 9999,
-              background: 'rgba(220, 38, 38, 0.2)',
-              border: '1px solid #DC2626',
-              color: '#FCA5A5',
-              fontSize: 12,
-              fontWeight: 800,
-              marginBottom: 16
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#EF4444' }}>emergency</span>
-              24/7 RAPID DISPATCH SQUAD
-            </div>
-
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 16px' }}>
-              Stranded on the Road?<br />
-              <span style={{ color: '#F87171' }}>Help Arrives in 15 Minutes.</span>
-            </h2>
-
-            <p style={{ fontSize: 16, color: '#CBD5E1', lineHeight: 1.6, margin: '0 0 28px' }}>
-              Flat tire, dead battery, overheating engine, or empty fuel tank? Our mobile road mechanics carry high-output jumper cables, tyre patchers, and tow-to-pump rescue assistance.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 32 }}>
-              {[
-                { title: 'Battery Jumpstart', time: '12 min ETA', price: 'from ₹349' },
-                { title: 'Puncture & Flat Tire', time: '14 min ETA', price: 'from ₹199' },
-                { title: 'Tow to Nearest Pump', time: '18 min ETA', price: 'from ₹299' },
-                { title: 'Flatbed Towing Truck', time: '25 min ETA', price: 'from ₹899' },
-              ].map((item, idx) => (
-                <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.06)', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <strong style={{ fontSize: 14, display: 'block', color: '#FFFFFF' }}>{item.title}</strong>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
-                    <span>{item.time}</span>
-                    <span style={{ color: '#34D399', fontWeight: 600 }}>{item.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => launchApp('/emergency')}
-              style={{
-                padding: '16px 32px',
-                borderRadius: 12,
-                background: '#DC2626',
-                color: '#FFFFFF',
-                fontSize: 16,
-                fontWeight: 800,
-                border: 'none',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                boxShadow: '0 8px 24px rgba(220, 38, 38, 0.45)'
-              }}
-            >
-              <span className="material-symbols-outlined">car_crash</span>
-              <span>Trigger Roadside Emergency SOS</span>
-            </button>
+            ))}
           </div>
-
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: 20,
-            padding: 30,
-            backdropFilter: 'blur(8px)'
-          }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', color: '#FFFFFF' }}>
-              Why Drivers Rely on FixMate Roadside
-            </h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {[
-                { title: 'Instant Live GPS Tracking', desc: 'Watch your mechanic navigate towards your exact highway kilometer stone.' },
-                { title: 'No Toll/Surge Ambiguity', desc: 'Clear distance-based quote shown in the app before dispatch confirms.' },
-                { title: 'Night-Shift Certified Mechanics', desc: 'On patrol 24 hours a day, 7 days a week, including monsoon emergencies.' },
-                { title: 'Emergency Contact Alert', desc: 'Optionally ping your emergency contact with live tracking coordinates.' },
-              ].map((pt, i) => (
-                <li key={i} style={{ display: 'flex', gap: 14, marginBottom: 20, alignItems: 'flex-start' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EF4444', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>check</span>
-                  </div>
-                  <div>
-                    <strong style={{ fontSize: 15, color: '#FFFFFF', display: 'block' }}>{pt.title}</strong>
-                    <span style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5 }}>{pt.desc}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FixMate Escrow Guarantee ───────────────────────────── */}
-      <section id="guarantee" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <span style={{ color: '#059669', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Consumer Protection
-          </span>
-          <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
-            The FixMate Escrow Shield
-          </h2>
-          <p style={{ color: '#64748B', fontSize: 16, maxWidth: 580, margin: '0 auto' }}>
-            Your money stays in our secure digital escrow vault until you test your repaired device and sign off.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20 }}>
-          {[
-            {
-              icon: 'lock',
-              title: 'Digital Escrow Vault',
-              desc: 'Payment is pre-authorized but never released to the technician until you mark the job as verified.'
-            },
-            {
-              icon: 'security',
-              title: '30-Day Service Warranty',
-              desc: 'If any repaired component fails within 30 calendar days, we dispatch a senior inspector free of charge.'
-            },
-            {
-              icon: 'support_agent',
-              title: 'Rapid Dispute Mediation',
-              desc: 'Disagree on a diagnostic charge? FixMate admins review uploaded photo evidence and resolve within 2 hours.'
-            },
-            {
-              icon: 'verified_user',
-              title: 'Damage Insurance',
-              desc: 'Up to ₹10,000 accidental property damage coverage during every on-premise technician service call.'
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                background: '#FFFFFF',
-                border: '1.5px solid #A7F3D0',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.06)'
-              }}
-            >
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: '#ECFDF5',
-                color: '#059669',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 16
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 26 }}>{item.icon}</span>
-              </div>
-              <h4 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px', color: '#0F172A' }}>{item.title}</h4>
-              <p style={{ fontSize: 14, color: '#64748B', margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        </section>
+      </LazySection>
 
       {/* ── Partner / For Providers Section ────────────────────── */}
       <section id="providers" style={{
@@ -1075,212 +1082,216 @@ export default function Website() {
       </section>
 
       {/* ── FAQ Section ────────────────────────────────────────── */}
-      <section id="faq" style={{ padding: '72px 20px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
-        <div style={{ maxWidth: 840, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Got Questions?
-            </span>
-            <h2 style={{ fontSize: 'clamp(26px, 3.8vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
-              Frequently Asked Questions
-            </h2>
-          </div>
+      <LazySection minHeight={380}>
+        <section id="faq" style={{ padding: '72px 20px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+          <div style={{ maxWidth: 840, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Got Questions?
+              </span>
+              <h2 style={{ fontSize: 'clamp(26px, 3.8vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
+                Frequently Asked Questions
+              </h2>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {faqs.map((faq, i) => (
-              <div
-                key={i}
-                style={{
-                  background: '#FFFFFF',
-                  borderRadius: 14,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {faqs.map((faq, i) => (
+                <div
+                  key={i}
                   style={{
-                    width: '100%',
-                    padding: '18px 20px',
-                    background: 'none',
-                    border: 'none',
-                    textAlign: 'left',
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer'
+                    background: '#FFFFFF',
+                    borderRadius: 14,
+                    border: '1px solid #E2E8F0',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <span>{faq.q}</span>
-                  <span className="material-symbols-outlined" style={{
-                    color: '#1A56DB',
-                    transform: openFaq === i ? 'rotate(180deg)' : 'none',
-                    transition: 'transform 0.2s ease'
-                  }}>
-                    expand_more
-                  </span>
-                </button>
-                {openFaq === i && (
-                  <div style={{ padding: '0 20px 20px', color: '#475569', fontSize: 14, lineHeight: 1.6 }}>
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                    style={{
+                      width: '100%',
+                      padding: '18px 20px',
+                      background: 'none',
+                      border: 'none',
+                      textAlign: 'left',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span>{faq.q}</span>
+                    <span className="material-symbols-outlined" style={{
+                      color: '#1A56DB',
+                      transform: openFaq === i ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.2s ease'
+                    }}>
+                      expand_more
+                    </span>
+                  </button>
+                  {openFaq === i && (
+                    <div style={{ padding: '0 20px 20px', color: '#475569', fontSize: 14, lineHeight: 1.6 }}>
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </LazySection>
 
       {/* ── Contact Section ────────────────────────────────────── */}
-      <section id="contact" style={{ padding: '80px 20px', maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 44 }}>
-          <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Support &amp; Desk
-          </span>
-          <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
-            We Are Always Here to Help
-          </h2>
-          <p style={{ color: '#64748B', fontSize: 15, maxWidth: 500, margin: '0 auto' }}>
-            Have a question about a recent job, warranty claim, or enterprise service? Send us a message.
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 32,
-          background: '#FFFFFF',
-          border: '1.5px solid #E2E8F0',
-          borderRadius: 20,
-          padding: '36px 30px',
-          boxShadow: '0 6px 20px rgba(15, 23, 42, 0.05)'
-        }}>
-          <div>
-            <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>Get in Touch</h3>
-            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, margin: '0 0 24px' }}>
-              Our customer care center is active 24/7 for emergency roadside inquiries and active service disputes.
+      <LazySection minHeight={400}>
+        <section id="contact" style={{ padding: '80px 20px', maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Support &amp; Desk
+            </span>
+            <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '8px 0 12px' }}>
+              We Are Always Here to Help
+            </h2>
+            <p style={{ color: '#64748B', fontSize: 15, maxWidth: 500, margin: '0 auto' }}>
+              Have a question about a recent job, warranty claim, or enterprise service? Send us a message.
             </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined">call</span>
-                </div>
-                <div>
-                  <strong style={{ fontSize: 14, display: 'block' }}>Emergency Helpline</strong>
-                  <span style={{ fontSize: 13, color: '#64748B' }}>1800-FIX-MATE (Toll Free)</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined">mail</span>
-                </div>
-                <div>
-                  <strong style={{ fontSize: 14, display: 'block' }}>Email Support</strong>
-                  <span style={{ fontSize: 13, color: '#64748B' }}>support@fixmate.app</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined">schedule</span>
-                </div>
-                <div>
-                  <strong style={{ fontSize: 14, display: 'block' }}>Response Time SLA</strong>
-                  <span style={{ fontSize: 13, color: '#059669', fontWeight: 600 }}>Under 30 Minutes</span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 32,
+            background: '#FFFFFF',
+            border: '1.5px solid #E2E8F0',
+            borderRadius: 20,
+            padding: '36px 30px',
+            boxShadow: '0 6px 20px rgba(15, 23, 42, 0.05)'
+          }}>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Full Name</label>
-              <input
-                type="text"
-                placeholder="Your name"
-                value={contactForm.name}
-                onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '11px 14px',
-                  borderRadius: 10,
-                  border: '1.5px solid #E2E8F0',
-                  fontSize: 14,
-                  outline: 'none',
-                  fontFamily: 'inherit'
-                }}
-              />
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>Get in Touch</h3>
+              <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, margin: '0 0 24px' }}>
+                Our customer care center is active 24/7 for emergency roadside inquiries and active service disputes.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="material-symbols-outlined">call</span>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 14, display: 'block' }}>Emergency Helpline</strong>
+                    <span style={{ fontSize: 13, color: '#64748B' }}>1800-FIX-MATE (Toll Free)</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="material-symbols-outlined">mail</span>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 14, display: 'block' }}>Email Support</strong>
+                    <span style={{ fontSize: 13, color: '#64748B' }}>support@fixmate.app</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', color: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="material-symbols-outlined">schedule</span>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 14, display: 'block' }}>Response Time SLA</strong>
+                    <span style={{ fontSize: 13, color: '#059669', fontWeight: 600 }}>Under 30 Minutes</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Email Address</label>
-              <input
-                type="email"
-                placeholder="you@domain.com"
-                value={contactForm.email}
-                onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '11px 14px',
-                  borderRadius: 10,
-                  border: '1.5px solid #E2E8F0',
-                  fontSize: 14,
-                  outline: 'none',
-                  fontFamily: 'inherit'
-                }}
-              />
-            </div>
+            <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={contactForm.name}
+                  onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    borderRadius: 10,
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: 14,
+                    outline: 'none',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
 
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Message</label>
-              <textarea
-                placeholder="How can we assist you?"
-                rows={3}
-                value={contactForm.message}
-                onChange={e => setContactForm({ ...contactForm, message: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '11px 14px',
-                  borderRadius: 10,
-                  border: '1.5px solid #E2E8F0',
-                  fontSize: 14,
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Email Address</label>
+                <input
+                  type="email"
+                  placeholder="you@domain.com"
+                  value={contactForm.email}
+                  onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    borderRadius: 10,
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: 14,
+                    outline: 'none',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
 
-            <button
-              type="submit"
-              style={{
-                padding: '13px 20px',
-                borderRadius: 10,
-                background: '#1A56DB',
-                color: '#FFFFFF',
-                fontSize: 14,
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                marginTop: 6
-              }}
-            >
-              <span>Submit Message</span>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
-            </button>
-          </form>
-        </div>
-      </section>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Message</label>
+                <textarea
+                  placeholder="How can we assist you?"
+                  rows={3}
+                  value={contactForm.message}
+                  onChange={e => setContactForm({ ...contactForm, message: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    borderRadius: 10,
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: 14,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  padding: '13px 20px',
+                  borderRadius: 10,
+                  background: '#1A56DB',
+                  color: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginTop: 6
+                }}
+              >
+                <span>Submit Message</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
+              </button>
+            </form>
+          </div>
+        </section>
+      </LazySection>
 
       {/* ── Modern Corporate Footer ────────────────────────────── */}
       <footer style={{
@@ -1299,7 +1310,7 @@ export default function Website() {
         }}>
           <div>
             <img
-              src="/fixmate-logo.png"
+              src="/fixmate-logo.webp"
               alt="FixMate"
               style={{ height: 38, width: 'auto', objectFit: 'contain', marginBottom: 16 }}
             />

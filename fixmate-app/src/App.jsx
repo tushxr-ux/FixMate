@@ -1,46 +1,43 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import RequireAuth from './components/RequireAuth';
 import AppHeader from './components/AppHeader';
 
-// Auth
-import Login  from './screens/auth/Login';
-import Signup from './screens/auth/Signup';
-
-// Shared
-import Splash from './screens/Splash';
+// ── Lazy-loaded Route Components (Dynamic Code Splitting) ──────────
+const Login            = lazy(() => import('./screens/auth/Login'));
+const Signup           = lazy(() => import('./screens/auth/Signup'));
+const Splash           = lazy(() => import('./screens/Splash'));
+const Website          = lazy(() => import('./screens/public/Website'));
 
 // Customer
-import Home             from './screens/customer/Home';
-import Items            from './screens/customer/Items';
-import Request          from './screens/customer/Request';
-import LocationPicker   from './screens/customer/LocationPicker';
-import Matching         from './screens/customer/Matching';
-import ProviderAssigned from './screens/customer/ProviderAssigned';
-import Tracking         from './screens/customer/Tracking';
-import Quote            from './screens/customer/Quote';
-import Complete         from './screens/customer/Complete';
-import Done             from './screens/customer/Done';
-import History          from './screens/customer/History';
-import JobDetail        from './screens/customer/JobDetail';
-import Profile          from './screens/customer/Profile';
-import Emergency        from './screens/customer/Emergency';
-import ProviderProfile  from './screens/customer/ProviderProfile';
-import NoProvider       from './screens/customer/NoProvider';
-import Dispute          from './screens/customer/Dispute';
+const Home             = lazy(() => import('./screens/customer/Home'));
+const Items            = lazy(() => import('./screens/customer/Items'));
+const Request          = lazy(() => import('./screens/customer/Request'));
+const LocationPicker   = lazy(() => import('./screens/customer/LocationPicker'));
+const Matching         = lazy(() => import('./screens/customer/Matching'));
+const ProviderAssigned = lazy(() => import('./screens/customer/ProviderAssigned'));
+const Tracking         = lazy(() => import('./screens/customer/Tracking'));
+const Quote            = lazy(() => import('./screens/customer/Quote'));
+const Complete         = lazy(() => import('./screens/customer/Complete'));
+const Done             = lazy(() => import('./screens/customer/Done'));
+const History          = lazy(() => import('./screens/customer/History'));
+const JobDetail        = lazy(() => import('./screens/customer/JobDetail'));
+const Profile          = lazy(() => import('./screens/customer/Profile'));
+const Emergency        = lazy(() => import('./screens/customer/Emergency'));
+const ProviderProfile  = lazy(() => import('./screens/customer/ProviderProfile'));
+const NoProvider       = lazy(() => import('./screens/customer/NoProvider'));
+const Dispute          = lazy(() => import('./screens/customer/Dispute'));
 
 // Provider
-import ProviderDashboard from './screens/provider/Dashboard';
-import ProviderJob        from './screens/provider/Job';
-import Diagnose          from './screens/provider/Diagnose';
-import ProviderQuote     from './screens/provider/ProviderQuote';
+const ProviderDashboard = lazy(() => import('./screens/provider/Dashboard'));
+const ProviderJob       = lazy(() => import('./screens/provider/Job'));
+const Diagnose          = lazy(() => import('./screens/provider/Diagnose'));
+const ProviderQuote     = lazy(() => import('./screens/provider/ProviderQuote'));
 
 // Admin
-import AdminDashboard from './screens/admin/Dashboard';
-
-// Public Website
-import Website from './screens/public/Website';
+const AdminDashboard    = lazy(() => import('./screens/admin/Dashboard'));
 
 function isMobileDevice() {
   if (typeof window === 'undefined') return false;
@@ -50,13 +47,43 @@ function isMobileDevice() {
   return isMobileUA || isSmallScreen;
 }
 
+function RouteLoader() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '60vh',
+      flex: 1
+    }}>
+      <div style={{
+        width: 32,
+        height: 32,
+        border: '3px solid #E2E8F0',
+        borderTopColor: 'var(--blue, #1A56DB)',
+        borderRadius: '50%',
+        animation: 'routeSpin 0.7s linear infinite'
+      }} />
+      <style>{`
+        @keyframes routeSpin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
 
   // 1. Explicit Marketing Website (accessible on all devices)
   if (location.pathname === '/website') {
-    return <Website />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <Website />
+      </Suspense>
+    );
   }
 
   // 2. Root Entry ('/') — Smart device-aware routing:
@@ -64,9 +91,17 @@ function AppLayout() {
   // Laptop / Desktop: opens the full marketing website (<Website />)
   if (location.pathname === '/') {
     if (isMobileDevice()) {
-      return <Splash />;
+      return (
+        <Suspense fallback={<RouteLoader />}>
+          <Splash />
+        </Suspense>
+      );
     }
-    return <Website />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <Website />
+      </Suspense>
+    );
   }
 
   // 3. Mobile-only Splash Route
@@ -74,98 +109,112 @@ function AppLayout() {
     if (!isMobileDevice()) {
       return <Navigate to="/" replace />;
     }
-    return <Splash />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <Splash />
+      </Suspense>
+    );
   }
 
   // 4. Full-page Auth (Desktop & Mobile)
   if (location.pathname === '/login') {
-    return <Login />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <Login />
+      </Suspense>
+    );
   }
   if (location.pathname === '/signup') {
-    return <Signup />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <Signup />
+      </Suspense>
+    );
   }
 
-  // 3. True Full-Width Web Application for Laptops & Mobiles
+  // 5. True Full-Width Web Application for Laptops & Mobiles
   return (
     <div className="web-app-shell">
       <AppHeader />
       <main className="web-app-content">
-        <Routes>
-          {/* Customer Booking & Dashboard */}
-          <Route path="/home" element={
-            <RequireAuth requiredRole="customer"><Home /></RequireAuth>
-          } />
-          <Route path="/items/:categoryId" element={
-            <RequireAuth requiredRole="customer"><Items /></RequireAuth>
-          } />
-          <Route path="/request/:categoryId/:itemName" element={
-            <RequireAuth requiredRole="customer"><Request /></RequireAuth>
-          } />
-          <Route path="/location-picker" element={
-            <RequireAuth requiredRole="customer"><LocationPicker /></RequireAuth>
-          } />
-          <Route path="/matching/:jobId" element={
-            <RequireAuth requiredRole="customer"><Matching /></RequireAuth>
-          } />
-          <Route path="/no-provider" element={
-            <RequireAuth requiredRole="customer"><NoProvider /></RequireAuth>
-          } />
-          <Route path="/provider-assigned/:jobId" element={
-            <RequireAuth requiredRole="customer"><ProviderAssigned /></RequireAuth>
-          } />
-          <Route path="/tracking/:jobId" element={
-            <RequireAuth requiredRole="customer"><Tracking /></RequireAuth>
-          } />
-          <Route path="/quote/:jobId" element={
-            <RequireAuth requiredRole="customer"><Quote /></RequireAuth>
-          } />
-          <Route path="/complete/:jobId" element={
-            <RequireAuth requiredRole="customer"><Complete /></RequireAuth>
-          } />
-          <Route path="/done/:jobId" element={
-            <RequireAuth requiredRole="customer"><Done /></RequireAuth>
-          } />
-          <Route path="/history" element={
-            <RequireAuth requiredRole="customer"><History /></RequireAuth>
-          } />
-          <Route path="/job/:jobId" element={
-            <RequireAuth requiredRole="customer"><JobDetail /></RequireAuth>
-          } />
-          <Route path="/dispute/:jobId" element={
-            <RequireAuth requiredRole="customer"><Dispute /></RequireAuth>
-          } />
-          <Route path="/profile" element={
-            <RequireAuth requiredRole="customer"><Profile /></RequireAuth>
-          } />
-          <Route path="/emergency" element={
-            <RequireAuth requiredRole="customer"><Emergency /></RequireAuth>
-          } />
-          <Route path="/provider-profile/:providerId" element={
-            <RequireAuth><ProviderProfile /></RequireAuth>
-          } />
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            {/* Customer Booking & Dashboard */}
+            <Route path="/home" element={
+              <RequireAuth requiredRole="customer"><Home /></RequireAuth>
+            } />
+            <Route path="/items/:categoryId" element={
+              <RequireAuth requiredRole="customer"><Items /></RequireAuth>
+            } />
+            <Route path="/request/:categoryId/:itemName" element={
+              <RequireAuth requiredRole="customer"><Request /></RequireAuth>
+            } />
+            <Route path="/location-picker" element={
+              <RequireAuth requiredRole="customer"><LocationPicker /></RequireAuth>
+            } />
+            <Route path="/matching/:jobId" element={
+              <RequireAuth requiredRole="customer"><Matching /></RequireAuth>
+            } />
+            <Route path="/no-provider" element={
+              <RequireAuth requiredRole="customer"><NoProvider /></RequireAuth>
+            } />
+            <Route path="/provider-assigned/:jobId" element={
+              <RequireAuth requiredRole="customer"><ProviderAssigned /></RequireAuth>
+            } />
+            <Route path="/tracking/:jobId" element={
+              <RequireAuth requiredRole="customer"><Tracking /></RequireAuth>
+            } />
+            <Route path="/quote/:jobId" element={
+              <RequireAuth requiredRole="customer"><Quote /></RequireAuth>
+            } />
+            <Route path="/complete/:jobId" element={
+              <RequireAuth requiredRole="customer"><Complete /></RequireAuth>
+            } />
+            <Route path="/done/:jobId" element={
+              <RequireAuth requiredRole="customer"><Done /></RequireAuth>
+            } />
+            <Route path="/history" element={
+              <RequireAuth requiredRole="customer"><History /></RequireAuth>
+            } />
+            <Route path="/job/:jobId" element={
+              <RequireAuth requiredRole="customer"><JobDetail /></RequireAuth>
+            } />
+            <Route path="/dispute/:jobId" element={
+              <RequireAuth requiredRole="customer"><Dispute /></RequireAuth>
+            } />
+            <Route path="/profile" element={
+              <RequireAuth requiredRole="customer"><Profile /></RequireAuth>
+            } />
+            <Route path="/emergency" element={
+              <RequireAuth requiredRole="customer"><Emergency /></RequireAuth>
+            } />
+            <Route path="/provider-profile/:providerId" element={
+              <RequireAuth><ProviderProfile /></RequireAuth>
+            } />
 
-          {/* Provider Portal */}
-          <Route path="/provider" element={
-            <RequireAuth requiredRole="provider"><ProviderDashboard /></RequireAuth>
-          } />
-          <Route path="/provider/job/:jobId" element={
-            <RequireAuth requiredRole="provider"><ProviderJob /></RequireAuth>
-          } />
-          <Route path="/provider/diagnose/:jobId" element={
-            <RequireAuth requiredRole="provider"><Diagnose /></RequireAuth>
-          } />
-          <Route path="/provider/quote/:jobId" element={
-            <RequireAuth requiredRole="provider"><ProviderQuote /></RequireAuth>
-          } />
+            {/* Provider Portal */}
+            <Route path="/provider" element={
+              <RequireAuth requiredRole="provider"><ProviderDashboard /></RequireAuth>
+            } />
+            <Route path="/provider/job/:jobId" element={
+              <RequireAuth requiredRole="provider"><ProviderJob /></RequireAuth>
+            } />
+            <Route path="/provider/diagnose/:jobId" element={
+              <RequireAuth requiredRole="provider"><Diagnose /></RequireAuth>
+            } />
+            <Route path="/provider/quote/:jobId" element={
+              <RequireAuth requiredRole="provider"><ProviderQuote /></RequireAuth>
+            } />
 
-          {/* Admin Management */}
-          <Route path="/admin" element={
-            <RequireAuth requiredRole="admin"><AdminDashboard /></RequireAuth>
-          } />
+            {/* Admin Management */}
+            <Route path="/admin" element={
+              <RequireAuth requiredRole="admin"><AdminDashboard /></RequireAuth>
+            } />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

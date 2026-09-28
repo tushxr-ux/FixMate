@@ -89,7 +89,7 @@ export default function Login() {
             style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 40 }}
           >
             <img
-              src="/fixmate-logo.png"
+              src="/fixmate-logo.webp"
               alt="FixMate"
               style={{ height: 42, width: 'auto', objectFit: 'contain' }}
             />
@@ -176,7 +176,7 @@ export default function Login() {
           {/* Header on Mobile */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <img
-              src="/fixmate-logo.png"
+              src="/fixmate-logo.webp"
               alt="FixMate"
               onClick={() => navigate('/website')}
               style={{

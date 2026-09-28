@@ -24,7 +24,7 @@ export default function AppHeader() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link to={user ? (isProvider ? '/provider' : isAdmin ? '/admin' : '/home') : '/website'} style={{ display: 'flex', alignItems: 'center' }}>
             <img
-              src="/fixmate-logo.png"
+              src="/fixmate-logo.webp"
               alt="FixMate"
               style={{ height: 36, width: 'auto', objectFit: 'contain' }}
             />
