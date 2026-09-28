@@ -1,0 +1,12 @@
+{
+  "name": "fixmate",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "fixmate-app"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=fixmate-app",
+    "dev": "npm run dev --workspace=fixmate-app"
+  }
+}
