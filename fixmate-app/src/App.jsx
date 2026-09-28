@@ -60,28 +60,29 @@ function AppLayout() {
   }
 
   // 2. Root Entry ('/') — Smart device-aware routing:
-  // Mobile device: open the app directly (/home if logged in, /login if not)
-  // Laptop / Desktop: open the marketing website (<Website />)
+  // Mobile device: show splash screen first (logo only), then advances to app
+  // Laptop / Desktop: opens the full marketing website (<Website />)
   if (location.pathname === '/') {
     if (isMobileDevice()) {
-      if (user) {
-        const dest = user.role === 'provider' ? '/provider' : user.role === 'admin' ? '/admin' : '/home';
-        return <Navigate to={dest} replace />;
-      }
-      return <Navigate to="/login" replace />;
+      return <Splash />;
     }
     return <Website />;
   }
 
-  // 2. Full-page Auth (Desktop & Mobile)
+  // 3. Mobile-only Splash Route
+  if (location.pathname === '/splash') {
+    if (!isMobileDevice()) {
+      return <Navigate to="/" replace />;
+    }
+    return <Splash />;
+  }
+
+  // 4. Full-page Auth (Desktop & Mobile)
   if (location.pathname === '/login') {
     return <Login />;
   }
   if (location.pathname === '/signup') {
     return <Signup />;
-  }
-  if (location.pathname === '/splash') {
-    return <Splash />;
   }
 
   // 3. True Full-Width Web Application for Laptops & Mobiles

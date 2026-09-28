@@ -4,41 +4,65 @@ import { useEffect, useCallback } from 'react';
 
 export default function Splash() {
   const { user } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
-  const handleTap = useCallback(() => {
+  const handleAdvance = useCallback(() => {
     if (user) {
-      if (user.role === 'provider') navigate('/provider');
-      else if (user.role === 'admin') navigate('/admin');
-      else navigate('/home');
+      if (user.role === 'provider') navigate('/provider', { replace: true });
+      else if (user.role === 'admin') navigate('/admin', { replace: true });
+      else navigate('/home', { replace: true });
     } else {
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   }, [user, navigate]);
 
-  // Auto-advance after 2s
+  // Auto-advance after 1.5s
   useEffect(() => {
-    const t = setTimeout(handleTap, 2000);
-    return () => clearTimeout(t);
-  }, [handleTap]);
+    const timer = setTimeout(handleAdvance, 1500);
+    return () => clearTimeout(timer);
+  }, [handleAdvance]);
 
   return (
-    <div className="splash-screen screen-enter" onClick={handleTap} style={{ cursor: 'pointer' }}>
-      <div className="splash-glow" />
+    <div
+      onClick={handleAdvance}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100dvh',
+        background: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        cursor: 'pointer',
+        userSelect: 'none',
+        overflow: 'hidden'
+      }}
+    >
       <img
         src="/fixmate-logo.png"
         alt="FixMate"
         style={{
-          width: 190,
-          maxWidth: '80%',
+          width: 220,
+          maxWidth: '72vw',
           height: 'auto',
           objectFit: 'contain',
-          zIndex: 1,
-          filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.2))'
+          animation: 'splashLogoIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
       />
-      <div className="splash-dot" style={{ marginTop: 18 }} />
-      <p className="splash-sub">Hyperlocal repairs &amp; roadside network</p>
+      <style>{`
+        @keyframes splashLogoIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
