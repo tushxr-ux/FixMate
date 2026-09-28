@@ -5,8 +5,16 @@ import { getProviders } from '../../store';
 import TopBar from '../../components/TopBar';
 import Spinner from '../../components/Spinner';
 
-// Mumbai default (fallback if Geolocation denied)
-const MUMBAI = { lat: 19.1376, lng: 72.8289 };
+// Mumbai (Thakur Village & Kandivali default)
+const MUMBAI = { lat: 19.2085, lng: 72.8735 };
+
+const POPULAR_KANDIVALI_AREAS = [
+  { name: 'Thakur Village', desc: 'Evershine / D-Mart', lat: 19.2085, lng: 72.8735 },
+  { name: 'Thakur Complex', desc: 'Near Highway', lat: 19.2055, lng: 72.8710 },
+  { name: 'Mahavir Nagar', desc: 'Kandivali West', lat: 19.2065, lng: 72.8354 },
+  { name: 'Akurli Road', desc: 'Growel\'s 101', lat: 19.2038, lng: 72.8655 },
+  { name: 'Charkop Sector 8', desc: 'Kandivali West', lat: 19.2165, lng: 72.8295 },
+];
 
 export default function LocationPicker() {
   const navigate  = useNavigate();
@@ -28,7 +36,7 @@ export default function LocationPicker() {
   useEffect(() => {
     if (!navigator.geolocation) {
       setGeoState('denied');
-      setAddress('Location unavailable — using Mumbai default.');
+      setAddress('Thakur Village, Kandivali East, Mumbai');
       setLoading(false);
       return;
     }
@@ -43,7 +51,7 @@ export default function LocationPicker() {
       },
       _err => {
         setGeoState('denied');
-        setAddress('Location permission denied — tap map to place pin.');
+        setAddress('Thakur Village, Kandivali East, Mumbai');
         setLoading(false);
       },
       { timeout: 8000, maximumAge: 60000 }
@@ -105,8 +113,41 @@ export default function LocationPicker() {
         </div>
       )}
 
+      {/* Quick Kandivali Neighborhoods */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 16px 2px', WebkitOverflowScrolling: 'touch' }}>
+        {POPULAR_KANDIVALI_AREAS.map((a, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => {
+              const latlng = { lat: a.lat, lng: a.lng };
+              setPin(latlng);
+              mapRef.current?.flyTo([a.lat, a.lng], 16);
+              setAddress(`${a.name}, Kandivali, Mumbai`);
+            }}
+            style={{
+              whiteSpace: 'nowrap',
+              padding: '6px 12px',
+              borderRadius: 9999,
+              border: pin.lat === a.lat ? '1.5px solid var(--blue)' : '1px solid var(--border)',
+              background: pin.lat === a.lat ? 'var(--blue-light)' : 'var(--surface)',
+              color: pin.lat === a.lat ? 'var(--blue)' : 'var(--text-body)',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--blue)' }}>location_on</span>
+            <span>{a.name}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Map */}
-      <div className="map-area" style={{ margin: '12px 16px 0', flex: 1, minHeight: 320 }}>
+      <div className="map-area" style={{ margin: '10px 16px 0', flex: 1, minHeight: 320 }}>
         <MapView
           ref={mapRef}
           center={[pin.lat, pin.lng]}

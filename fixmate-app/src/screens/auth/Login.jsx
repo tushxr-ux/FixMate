@@ -157,7 +157,7 @@ export default function Login() {
             &ldquo;The technician showed me the photo diagnosis before fixing my washing machine. Super fair and transparent!&rdquo;
           </p>
           <div style={{ fontSize: 12, color: '#93C5FD', fontWeight: 600 }}>
-            — Aditi D., Verified Customer in Bengaluru
+            — Aditi D., Verified Customer in Thakur Village, Kandivali
           </div>
         </div>
       </div>

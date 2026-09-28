@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProvider, saveJob, fmt, addNotif, Config } from '../../store';
+import { getJob, getProvider, saveJob, fmt, addNotif, Config, getVisitingFees } from '../../store';
 import { useToast } from '../../context/ToastContext';
 import TopBar from '../../components/TopBar';
 import LineItems from '../../components/LineItems';
@@ -31,6 +31,7 @@ export default function Quote() {
 
   if (!job) { navigate('/home'); return null; }
 
+  const fees = getVisitingFees(job);
   const diagnosisText = job.diagnosis || DEFAULT_QUOTE.diagnosis;
   const baseParts     = job.parts?.length  ? job.parts  : DEFAULT_QUOTE.parts;
   const baseLabour    = job.labour > 0     ? job.labour : DEFAULT_QUOTE.labour;
@@ -46,9 +47,8 @@ export default function Quote() {
     ? (job.addOns?.[0] || DEMO_REVISIONS[revisionCount] || DEMO_REVISIONS[0])
     : null;
 
-  // Tiered visiting fee (§5.3): initial quote always shows ₹50;
-  // fee is updated on accept/decline
-  const visitFee  = job.visitingFee || Config.visitingFeeAccept;
+  // Tiered visiting fee (§5.3): Towing is ₹99 / ₹199; standard repairs are ₹50 / ₹100
+  const visitFee  = job.visitingFee || fees.accept;
   const partsSum  = baseParts.reduce((s, p) => s + (Number(p.cost) || 0), 0);
   const addOnSum  = pendingAddOn ? Number(pendingAddOn.cost) : 0;
   const total     = visitFee + partsSum + Number(baseLabour) + (phase === 'revision' ? addOnSum : 0);
@@ -93,7 +93,7 @@ export default function Quote() {
         addOns: [],        // pending cleared
         revisions: newRevisions,
         total: newTotal,
-        visitingFee: Config.visitingFeeAccept, // §5.3
+        visitingFee: fees.accept, // §5.3 (₹99 for towing, ₹50 for standard)
         quoteAccepted: true,
         status: newRevisions.length >= maxRevisions ? 'in_progress' : 'in_progress',
         reassembled: null, // not pending reassembly
@@ -116,7 +116,7 @@ export default function Quote() {
       ...job,
       parts: baseParts, labour: baseLabour, addOns: [],
       total, diagnosis: diagnosisText,
-      visitingFee: Config.visitingFeeAccept, // §5.3: ₹50
+      visitingFee: fees.accept, // §5.3 (₹99 for towing, ₹50 for standard)
       quoteAccepted: true, status: 'in_progress',
       revisions: approvedRevisions,
       reassembled: null,
@@ -142,7 +142,7 @@ export default function Quote() {
         parts: baseParts, labour: baseLabour,
         addOns: [], total: originalTotal,
         diagnosis: diagnosisText,
-        visitingFee: Config.visitingFeeAccept,
+        visitingFee: fees.accept,
         quoteAccepted: true, status: 'in_progress',
         reassembled: 'pending', // §5.4: provider must reassemble
       };
@@ -156,26 +156,26 @@ export default function Quote() {
       toast.info('Change order declined. Provider must reassemble your item before leaving.');
       navigate(`/complete/${jobId}`);
     } else {
-      // §5.3: quote rejected → ₹100 visiting fee
+      // §5.3: quote rejected → ₹199 for towing, ₹100 for standard
       const updated = {
         ...job,
         status: 'quote_rejected',
-        visitingFee: Config.visitingFeeDecline, // ₹100
-        total: Config.visitingFeeDecline,
+        visitingFee: fees.decline,
+        total: fees.decline,
         quoteAccepted: false,
       };
       saveJob(updated);
       setJob(updated);
       if (job.providerId) addNotif(job.providerId, {
         title: 'Quote Declined',
-        text: `Customer declined repair. Visiting fee ₹${Config.visitingFeeDecline} applies.`,
+        text: `Customer declined service. Visiting fee ₹${fees.decline} applies.`,
       });
-      toast.warn(`Quote declined. ₹${Config.visitingFeeDecline} visiting fee applies.`);
+      toast.warn(`Quote declined. ₹${fees.decline} visiting fee applies.`);
       navigate(`/done/${jobId}`);
     }
   }
 
-  const declineFee = phase === 'initial' ? Config.visitingFeeDecline : Config.visitingFeeAccept;
+  const declineFee = phase === 'initial' ? fees.decline : fees.accept;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>

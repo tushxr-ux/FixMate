@@ -213,7 +213,7 @@ export default function ProviderDashboard() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--blue)' }}>location_on</span>
-                  <span>{j.location?.address || 'Andheri West, Mumbai'}</span>
+                  <span>{j.location?.address || 'Thakur Village, Kandivali East, Mumbai'}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button 

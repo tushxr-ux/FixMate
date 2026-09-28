@@ -54,7 +54,7 @@ export default function Emergency() {
       item: `${vehicle === 'car' ? 'Car' : 'Bike'} — ${selectedIssue === 'Fuel out' ? 'Tow to Petrol Pump' : selectedIssue}`,
       issue: `ROAD SERVICE: ${selectedIssue === 'Fuel out' ? 'Ran Out of Fuel (Tow to nearest petrol pump per Section 5.9)' : selectedIssue}. ${extraDetails}`,
       mode: 'immediate',
-      location: location.state?.location || { address: 'Western Express Hwy, Andheri West, Mumbai', lat: 19.1364, lng: 72.8296 },
+      location: location.state?.location || { address: 'Western Express Highway, Near Thakur Complex Flyover, Kandivali East, Mumbai', lat: 19.2062, lng: 72.8710 },
     });
 
     if (job) {
@@ -181,11 +181,13 @@ export default function Emergency() {
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px' }}
         >
           <span className="material-symbols-outlined">bolt</span>
-          Dispatch Nearest Roadside Mechanic (₹50 Visiting Fee)
+          Dispatch Nearest Roadside Mechanic ({selectedIssue === 'Towing' || selectedIssue === 'Fuel out' ? '₹99 Towing Fee' : '₹50 Visiting Fee'})
         </button>
 
-        <p className="muted" style={{ textAlign: 'center', marginTop: 12, fontSize: 11 }}>
-          Live GPS location shared with technician immediately upon dispatch.
+        <p className="muted" style={{ textAlign: 'center', marginTop: 10, fontSize: 11, lineHeight: 1.4 }}>
+          {selectedIssue === 'Towing' || selectedIssue === 'Fuel out'
+            ? 'Towing Fee: ₹99 applies when service is accepted, or ₹199 if declined after on-site inspection.'
+            : 'Live GPS location shared with technician immediately upon dispatch.'}
         </p>
       </div>
 

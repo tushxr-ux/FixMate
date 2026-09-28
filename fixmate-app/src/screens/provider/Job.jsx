@@ -183,7 +183,7 @@ export default function ProviderJob() {
               <span className="material-symbols-outlined" style={{ color: 'var(--blue)', fontSize: 18, marginTop: 2 }}>location_on</span>
               <div>
                 <strong style={{ display: 'block', color: 'var(--text)' }}>Service Location</strong>
-                <span style={{ color: 'var(--gray)' }}>{job.location?.address || 'Andheri West, Mumbai'}</span>
+                <span style={{ color: 'var(--gray)' }}>{job.location?.address || 'Thakur Village, Kandivali East, Mumbai'}</span>
               </div>
             </div>
           </div>
@@ -258,20 +258,20 @@ export default function ProviderJob() {
           {showMap && (
             <div style={{ height: 220, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', marginBottom: 8 }}>
               <MapView 
-                center={job.location ? [job.location.lat, job.location.lng] : [19.1364, 72.8296]}
+                center={job.location ? [job.location.lat, job.location.lng] : [19.2085, 72.8735]}
                 zoom={14}
-                customerPos={job.location ? [job.location.lat, job.location.lng] : [19.1364, 72.8296]}
-                providerPos={prov ? [prov.lat, prov.lng] : [19.1376, 72.8289]}
+                customerPos={job.location ? [job.location.lat, job.location.lng] : [19.2085, 72.8735]}
+                providerPos={prov ? [prov.lat, prov.lng] : [19.2062, 72.8710]}
                 route={[
-                  prov ? [prov.lat, prov.lng] : [19.1376, 72.8289],
-                  job.location ? [job.location.lat, job.location.lng] : [19.1364, 72.8296]
+                  prov ? [prov.lat, prov.lng] : [19.2062, 72.8710],
+                  job.location ? [job.location.lat, job.location.lng] : [19.2085, 72.8735]
                 ]}
               />
             </div>
           )}
 
           <a 
-            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.location?.address || 'Andheri West, Mumbai')}`}
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.location?.address || 'Thakur Village, Kandivali East, Mumbai')}`}
             target="_blank" 
             rel="noreferrer"
             className="btn btn-ghost" 
