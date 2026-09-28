@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 
 /**
  * LazySection
- * Uses the native browser IntersectionObserver API to defer mounting
- * heavy offscreen content until the user scrolls within `rootMargin` of it.
+ * Uses IntersectionObserver for smooth entrance and browser content-visibility
+ * for off-screen rendering optimization WITHOUT layout shifts or breaking anchor navigation.
  */
-export default function LazySection({ children, minHeight = 350, rootMargin = '250px' }) {
+export default function LazySection({ children, className = '', style = {} }) {
   const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef(null);
+  const ref = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
@@ -22,19 +22,30 @@ export default function LazySection({ children, minHeight = 350, rootMargin = '2
           observer.disconnect();
         }
       },
-      { rootMargin }
+      { rootMargin: '200px' }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    if (ref.current) {
+      observer.observe(ref.current);
     }
 
     return () => observer.disconnect();
-  }, [rootMargin]);
+  }, []);
 
   return (
-    <div ref={sectionRef} style={{ minHeight: isVisible ? undefined : minHeight, width: '100%' }}>
-      {isVisible ? children : null}
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        contentVisibility: 'auto',
+        containIntrinsicSize: '1px 600px',
+        width: '100%',
+        opacity: isVisible ? 1 : 0.9,
+        transition: 'opacity 0.3s ease',
+        ...style
+      }}
+    >
+      {children}
     </div>
   );
 }
