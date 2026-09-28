@@ -181,7 +181,7 @@ export default function Emergency() {
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px' }}
         >
           <span className="material-symbols-outlined">bolt</span>
-          Dispatch Nearest Roadside Mechanic (₹50 Base Fee)
+          Dispatch Nearest Roadside Mechanic (₹50 Visiting Fee)
         </button>
 
         <p className="muted" style={{ textAlign: 'center', marginTop: 12, fontSize: 11 }}>

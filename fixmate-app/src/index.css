@@ -14,6 +14,7 @@
   --blue-dark:       #0F3E99;
   --blue-deep:       #0A2540;
   --blue-light:      #EFF6FF;
+  --blue-50:         #EFF6FF;
   --blue-tint:       #DBEAFE;
   --blue-glow:       rgba(26, 86, 219, 0.16);
 
@@ -33,6 +34,8 @@
   --text-body:       #334155;
   --text-muted:      #64748B;
   --text-light:      #94A3B8;
+  --gray:            #64748B;
+  --gray-light:      #94A3B8;
 
   /* Borders & Dividers */
   --border:          #E2E8F0;
@@ -1036,6 +1039,14 @@ button {
 
 .btn + .btn {
   margin-top: 10px;
+}
+
+/* Reset margin-top for horizontal button groups & flex rows */
+div[style*="display: flex"]:not([style*="column"]) > .btn,
+div[style*="display:flex"]:not([style*="column"]) > .btn,
+.btn-row > .btn,
+.btn-group > .btn {
+  margin-top: 0 !important;
 }
 
 .btn-primary {

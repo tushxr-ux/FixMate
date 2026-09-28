@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, saveJob, getProvider, getUserById, fmt, addNotif } from '../../store';
+import { getJob, saveJob, getProvider, getUserById, fmt, addNotif, saveConfirmationCall } from '../../store';
 import { useToast } from '../../context/ToastContext';
 import TopBar from '../../components/TopBar';
 import MapView from '../../components/MapView';
@@ -159,6 +159,11 @@ export default function ProviderJob() {
               <a 
                 href={`tel:${customer.phone}`}
                 className="btn btn-outline btn-sm"
+                onClick={() => {
+                  saveConfirmationCall(job.id, 'provider');
+                  const fresh = getJob(job.id);
+                  if (fresh) setJob(fresh);
+                }}
                 style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>call</span>
@@ -166,6 +171,12 @@ export default function ProviderJob() {
               </a>
             )}
           </div>
+
+          {job.confirmationCall && (
+            <div style={{ marginTop: 8, marginBottom: 4, padding: '6px 10px', background: 'var(--green-bg, #DCFCE7)', borderRadius: 6, fontSize: 11, color: 'var(--green, #16A34A)' }}>
+              ✓ Customer confirmation call logged ({new Date(job.confirmationCall.at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })})
+            </div>
+          )}
 
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
@@ -323,6 +334,37 @@ export default function ProviderJob() {
 
           {job.status === 'in_progress' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* §5.4: Reassembly obligation banner for provider if revision was declined */}
+              {job.reassembled === 'pending' && (
+                <div style={{ padding: '12px', background: '#FEF2F2', border: '1px solid #EF4444', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#DC2626', fontWeight: 700, fontSize: 13 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>build</span>
+                    Reassembly Obligation Active (§5.4)
+                  </div>
+                  <p style={{ margin: '4px 0 8px', fontSize: 12, color: '#991B1B', lineHeight: 1.4 }}>
+                    Customer declined revision. You must safely reassemble the {job.item} back to its initial state before ending the visit.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ borderColor: '#DC2626', color: '#DC2626', fontSize: 12 }}
+                    onClick={() => {
+                      const updated = { ...job, reassembled: 'completed' };
+                      saveJob(updated);
+                      setJob(updated);
+                      toast.success('Appliance reassembly confirmed.');
+                    }}
+                  >
+                    ✓ Confirm Appliance Reassembled
+                  </button>
+                </div>
+              )}
+              {job.reassembled === 'completed' && (
+                <div style={{ padding: '8px 12px', background: 'var(--green-bg, #DCFCE7)', borderRadius: 6, fontSize: 12, color: 'var(--green, #16A34A)' }}>
+                  ✓ Appliance reassembly verified &amp; documented (§5.4).
+                </div>
+              )}
+
               {/* After repair photo upload */}
               <div style={{ padding: '12px', border: '1px dashed var(--border)', borderRadius: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>
