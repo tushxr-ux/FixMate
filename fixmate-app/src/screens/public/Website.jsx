@@ -79,8 +79,7 @@ export default function Website() {
       minHeight: '100vh',
       background: '#FFFFFF',
       color: '#0F172A',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      overflowX: 'hidden'
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     }}>
       {/* ── Sticky Blur Navbar ─────────────────────────────────── */}
       <header style={{
@@ -659,7 +658,7 @@ export default function Website() {
       </section>
 
       {/* ── How It Works Section ───────────────────────────────── */}
-      <LazySection minHeight={420}>
+      <LazySection>
         <section id="how-it-works" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 54 }}>
             <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -744,7 +743,7 @@ export default function Website() {
       </LazySection>
 
       {/* ── 24/7 Roadside SOS Section ──────────────────────────── */}
-      <LazySection minHeight={500}>
+      <LazySection>
         <section id="roadside" style={{
           padding: '72px 20px',
           background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
@@ -851,7 +850,7 @@ export default function Website() {
       </LazySection>
 
       {/* ── FixMate Escrow Guarantee ───────────────────────────── */}
-      <LazySection minHeight={380}>
+      <LazySection>
         <section id="guarantee" style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <span style={{ color: '#059669', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -1082,7 +1081,7 @@ export default function Website() {
       </section>
 
       {/* ── FAQ Section ────────────────────────────────────────── */}
-      <LazySection minHeight={380}>
+      <LazySection>
         <section id="faq" style={{ padding: '72px 20px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
           <div style={{ maxWidth: 840, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -1145,7 +1144,7 @@ export default function Website() {
       </LazySection>
 
       {/* ── Contact Section ────────────────────────────────────── */}
-      <LazySection minHeight={400}>
+      <LazySection>
         <section id="contact" style={{ padding: '80px 20px', maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <span style={{ color: '#1A56DB', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
