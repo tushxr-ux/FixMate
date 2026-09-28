@@ -41,12 +41,12 @@ export default function Website() {
 
   const faqs = [
     {
-      q: 'How does the ₹50 visiting fee work?',
-      a: 'FixMate charges a standardized ₹50 inspection fee for our verified technician to arrive at your doorstep and physically diagnose your appliance or issue. You only pay for repairs after you review and approve the itemized quote.'
+      q: 'How does the visiting fee work?',
+      a: 'FixMate charges a standardized ₹50 inspection fee when you approve the repair quote. If you choose to decline the repair after diagnosis, a ₹100 visiting fee applies (covers the technician\'s travel and diagnosis time). Either way, you see the full quote before committing to anything.'
     },
     {
       q: 'What happens if I decline the quote after diagnosis?',
-      a: 'You are completely free to decline! If you choose not to proceed with the repair after receiving the physical diagnosis, you only pay the ₹50 visiting fee. There are zero penalty fees or hidden charges.'
+      a: 'You are completely free to decline! If you choose not to proceed with the repair after receiving the physical diagnosis, a ₹100 visiting fee applies. This is clearly shown before you book. No hidden charges.'
     },
     {
       q: 'Are all FixMate technicians background verified?',

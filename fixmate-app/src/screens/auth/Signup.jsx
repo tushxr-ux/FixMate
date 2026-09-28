@@ -280,7 +280,7 @@ export default function Signup() {
                   ))}
                 </div>
                 <p style={{ margin:'6px 0 0', fontSize:11, color:'var(--gray)' }}>
-                  New providers start with a 3 km service radius. This expands to {'{'}5{'}'} km after 5 jobs &amp; ≥4.0 rating.
+                  New providers start with a 3 km service radius. This expands to 5 km after 5 jobs &amp; ≥4.0 rating.
                 </p>
               </div>
             )}
