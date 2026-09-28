@@ -1,0 +1,11 @@
+{
+  "framework": "vite",
+  "buildCommand": "cd fixmate-app && npm install && npm run build",
+  "outputDirectory": "fixmate-app/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
