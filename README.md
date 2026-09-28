@@ -10,9 +10,9 @@
 
 - **🗺️ Real Leaflet + OSM Map**: Live geolocation, reverse geocoding, and animated technician tracking along route polylines.
 - **🔍 Diagnosis-First Pricing**: Technicians perform physical inspection and file itemized quotes before any repair begins.
-- **🛡️ Guaranteed ₹50 Visiting Fee**: Standardized fixed inspection fee. Customers can decline quotes without penalty.
-- **⚠️ Transparent Change Orders**: Revisions during work require customer authorization (max 3 revisions) with clear rejection paths.
-- **🚨 24/7 Roadside Rescue**: Flat tyre, dead battery, fuel delivery, and towing with safety boundaries prioritizing emergency responders (112) during accidents.
+- **🛡️ Tiered Visiting Fee**: Standardized diagnosis fee (₹50 when repair proceeds; ₹100 if customer declines repair post-diagnosis per Section 5.3).
+- **⚠️ Transparent Change Orders**: Revisions during work require customer authorization (max 3 revisions) with clear rejection and reassembly obligations (Section 5.4).
+- **🚨 24/7 Roadside Rescue**: Flat tyre, dead battery, tow-to-pump fuel assistance (Section 5.9), and towing with safety boundaries prioritizing emergency responders (112) during accidents.
 - **⚖️ Trust & Safety Desk**: Customer dispute desk with 6 issue categories and photo evidence verification.
 - **🌐 Responsive Marketing Website**: 10 public pages (Home, How It Works, Services, Customers, Providers, Trust, Roadside, About, FAQ, Contact).
 - **📋 Implementation Control Center**: Interactive [checklist.html](checklist.html) tracking 100% completion across all 15 roadmap phases (216/216 tasks).

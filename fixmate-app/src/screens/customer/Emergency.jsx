@@ -11,15 +11,13 @@ export default function Emergency() {
 
   const [vehicle, setVehicle] = useState('car'); // 'bike' | 'car'
   const [selectedIssue, setSelectedIssue] = useState('');
-  const [fuelType, setFuelType] = useState('petrol');
-  const [fuelLitres, setFuelLitres] = useState('5');
   const [towDestination, setTowDestination] = useState('Nearest authorized workshop');
   const [showSafetyModal, setShowSafetyModal] = useState(false);
 
   const issues = [
     { id: 'Battery dead',    label: 'Battery Dead',    icon: 'battery_alert',    desc: 'Jumpstart or battery check' },
     { id: 'Tyre puncture',   label: 'Tyre Puncture',   icon: 'tire_repair',      desc: 'Stepney change or puncture fix' },
-    { id: 'Fuel out',        label: 'Ran Out of Fuel', icon: 'local_gas_station',desc: 'Emergency fuel delivery to spot' },
+    { id: 'Fuel out',        label: 'Ran Out of Fuel', icon: 'local_gas_station',desc: 'Tow to nearest petrol pump' },
     { id: 'Towing',          label: 'Towing Needed',   icon: 'local_shipping',   desc: 'Flatbed or chain tow to garage' },
     { id: 'Engine fault',    label: 'Engine Breakdown',icon: 'build',            desc: 'Overheating, clutch, or starting issue' },
     { id: 'Collision / SOS', label: 'Collision / SOS', icon: 'e911_emergency',   desc: 'Accident or active danger' },
@@ -31,6 +29,11 @@ export default function Emergency() {
       return;
     }
     setSelectedIssue(issueId);
+    if (issueId === 'Fuel out') {
+      setTowDestination('Nearest petrol pump');
+    } else if (issueId === 'Towing' && towDestination === 'Nearest petrol pump') {
+      setTowDestination('Nearest authorized workshop');
+    }
   }
 
   function handleDispatch() {
@@ -41,15 +44,15 @@ export default function Emergency() {
 
     let extraDetails = `Vehicle: ${vehicle === 'car' ? '4-Wheeler (Car/SUV)' : '2-Wheeler (Bike/Scooter)'}`;
     if (selectedIssue === 'Fuel out') {
-      extraDetails += ` · Fuel: ${fuelLitres}L of ${fuelType.toUpperCase()}`;
+      extraDetails += ` · Service: Tow to pump · Destination: ${towDestination || 'Nearest petrol pump'}`;
     } else if (selectedIssue === 'Towing') {
-      extraDetails += ` · Destination: ${towDestination}`;
+      extraDetails += ` · Destination: ${towDestination || 'Nearest authorized workshop'}`;
     }
 
     const job = createJob({
       category: 'roadside',
-      item: `${vehicle === 'car' ? 'Car' : 'Bike'} — ${selectedIssue}`,
-      issue: `ROAD SERVICE: ${selectedIssue}. ${extraDetails}`,
+      item: `${vehicle === 'car' ? 'Car' : 'Bike'} — ${selectedIssue === 'Fuel out' ? 'Tow to Petrol Pump' : selectedIssue}`,
+      issue: `ROAD SERVICE: ${selectedIssue === 'Fuel out' ? 'Ran Out of Fuel (Tow to nearest petrol pump per Section 5.9)' : selectedIssue}. ${extraDetails}`,
       mode: 'immediate',
       location: location.state?.location || { address: 'Western Express Hwy, Andheri West, Mumbai', lat: 19.1364, lng: 72.8296 },
     });
@@ -149,45 +152,20 @@ export default function Emergency() {
           ))}
         </div>
 
-        {/* Specific logic for Fuel out */}
-        {selectedIssue === 'Fuel out' && (
+        {/* Specific logic for Fuel out or Towing */}
+        {(selectedIssue === 'Fuel out' || selectedIssue === 'Towing') && (
           <div className="prov-card" style={{ marginBottom: 16, background: '#F8FAFC' }}>
-            <strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>Fuel Requirements</strong>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-              {['petrol', 'diesel'].map(f => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFuelType(f)}
-                  className={fuelType === f ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
-                  style={{ flex: 1, textTransform: 'capitalize' }}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <label style={{ fontSize: 12 }}>Quantity:</label>
-              <select
-                value={fuelLitres}
-                onChange={e => setFuelLitres(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
-              >
-                <option value="3">3 Litres</option>
-                <option value="5">5 Litres</option>
-                <option value="10">10 Litres</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Specific logic for Towing */}
-        {selectedIssue === 'Towing' && (
-          <div className="prov-card" style={{ marginBottom: 16, background: '#F8FAFC' }}>
-            <strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>Towing Destination</strong>
+            <strong style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
+              {selectedIssue === 'Fuel out' ? '⛽ Tow Destination (Nearest Petrol Pump)' : 'Towing Destination'}
+            </strong>
+            {selectedIssue === 'Fuel out' && (
+              <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--gray)', lineHeight: 1.4 }}>
+                FixMate tows your vehicle to a licensed petrol pump (Section 5.9 — fuel delivery in unapproved containers is prohibited for legal &amp; fire safety compliance).
+              </p>
+            )}
             <input
               type="text"
-              placeholder="e.g. Nearest Authorized Service Center, or Garage Address"
+              placeholder={selectedIssue === 'Fuel out' ? 'e.g. Nearest petrol pump (HP / IndianOil / BPCL)' : 'e.g. Nearest Authorized Service Center, or Garage Address'}
               value={towDestination}
               onChange={e => setTowDestination(e.target.value)}
               style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}

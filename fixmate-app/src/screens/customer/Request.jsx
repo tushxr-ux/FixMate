@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { createJob } from '../../store';
+import { createJob, createHold, currentUser } from '../../store';
 import TopBar from '../../components/TopBar';
 
 export default function Request() {
@@ -58,6 +58,12 @@ export default function Request() {
       scheduledTime: mode === 'scheduled' ? schedAt : null,
       location: pickedLocation,
     });
+
+    // §2.1: place ₹100 hold on wallet for scheduled bookings (no-show protection)
+    if (job && mode === 'scheduled') {
+      const user = currentUser();
+      if (user) createHold(user.id, 100, job.id);
+    }
 
     setLoading(false);
     if (!job) { setError('Please log in to book a job.'); return; }

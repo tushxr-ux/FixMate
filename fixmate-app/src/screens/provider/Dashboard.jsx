@@ -126,6 +126,13 @@ export default function ProviderDashboard() {
               </div>
             ))}
           </div>
+          {/* §6.2: new provider visibility cap notice */}
+          {prov?.newProvider && (
+            <div style={{ marginTop: 12, padding: '8px 12px', background: '#FEF3C7', borderRadius: 6, fontSize: 12, color: '#92400E', borderLeft: '3px solid #D97706' }}>
+              <strong>New Provider Mode</strong> — visible within {prov.visibilityCap || 3} km radius.{' '}
+              Complete {Math.max(0, 5 - (prov.totalJobs || 0))} more job(s) &amp; maintain ≥4.0 rating to unlock full {5} km radius.
+            </div>
+          )}
         </div>
 
         {/* Availability toggle */}

@@ -4,13 +4,19 @@
    ─────────────────────────────────────────────── */
 
 export const Config = {
-  appName:        'FixMate',
-  version:        '1.0.0',
-  env:            'development',
-  visitingFee:    50,
-  maxRevisions:   3,
-  defaultRadius:  5,   // km
-  NS:             'fm_',
+  appName:                    'FixMate',
+  version:                    '1.0.0',
+  env:                        'development',
+  visitingFee:                50,  // Default shown before decision
+  visitingFeeAccept:          50,  // Section 5.3: ₹50 when repair proceeds
+  visitingFeeDecline:         100, // Section 5.3: ₹100 if customer declines repair post-diagnosis
+  maxRevisions:               3,   // Section 5.4: capped at 3 revisions
+  defaultRadius:              5,   // km
+  newProviderRadius:          3,   // Section 6.2: capped visibility radius for new providers
+  newProviderJobThreshold:    5,   // Section 6.2: jobs needed to graduate
+  newProviderRatingThreshold: 4.0, // Section 6.2: rating needed to graduate
+  disputeSuspensionThreshold: 3,   // Section 6.4: pattern threshold before suspension
+  NS:                         'fm_',
 };
 
 /* ── localStorage helpers ─────────────────── */
@@ -28,11 +34,14 @@ const drop = (key) => localStorage.removeItem(Config.NS + key);
 /* ── Seed data ────────────────────────────── */
 const SEED_USERS = [
   { id:'u1', name:'Aditi Sharma',  email:'aditi@demo.com',      password:'demo',
-    phone:'+91 98765 43210', role:'customer', avatar:'AS', address:'Andheri West, Mumbai' },
+    phone:'+91 98765 43210', role:'customer', avatar:'AS', address:'Andheri West, Mumbai',
+    wallet: { balance: 500, holds: [] } },
   { id:'u2', name:'Rakesh Kumar',  email:'rakesh@demo.com',      password:'demo',
-    phone:'+91 99887 12345', role:'provider', avatar:'RK', address:'Andheri East, Mumbai' },
+    phone:'+91 99887 12345', role:'provider', avatar:'RK', address:'Andheri East, Mumbai',
+    wallet: { balance: 500, holds: [] } },
   { id:'u3', name:'Admin User',    email:'admin@fixmate.com',    password:'admin',
-    phone:'+91 00000 00000', role:'admin',    avatar:'AD', address:'FixMate HQ, Mumbai' },
+    phone:'+91 00000 00000', role:'admin',    avatar:'AD', address:'FixMate HQ, Mumbai',
+    wallet: { balance: 500, holds: [] } },
 ];
 
 const SEED_PROVIDERS = [
@@ -42,7 +51,7 @@ const SEED_PROVIDERS = [
     rating:4.7, totalJobs:128, distKm:1.4,
     verified:true, idVerified:true, bizVerified:true, available:true,
     lat:19.1376, lng:72.8289, categories:['electronics'],
-    serviceRadius:5, cancellations:2, noShows:0,
+    serviceRadius:5, newProvider:false, cancellations:2, noShows:0,
   },
   {
     id:'prov2', userId:'p_s2', name:'Suresh Auto Garage', init:'SA',
@@ -50,7 +59,7 @@ const SEED_PROVIDERS = [
     rating:4.5, totalJobs:96, distKm:2.1,
     verified:true, idVerified:true, bizVerified:false, available:true,
     lat:19.1356, lng:72.8305, categories:['mechanic','roadside'],
-    serviceRadius:8, cancellations:4, noShows:1,
+    serviceRadius:8, newProvider:false, cancellations:4, noShows:1,
   },
   {
     id:'prov3', userId:'p_s3', name:'Iqbal Plumbing Works', init:'IP',
@@ -58,7 +67,7 @@ const SEED_PROVIDERS = [
     rating:4.8, totalJobs:74, distKm:0.9,
     verified:false, idVerified:true, bizVerified:false, available:true,
     lat:19.1390, lng:72.8275, categories:['plumber'],
-    serviceRadius:3, cancellations:0, noShows:0,
+    serviceRadius:3, newProvider:false, cancellations:0, noShows:0,
   },
   {
     id:'prov4', userId:'p_s4', name:'Meena Appliance Care', init:'MA',
@@ -66,7 +75,15 @@ const SEED_PROVIDERS = [
     rating:4.3, totalJobs:45, distKm:3.2,
     verified:false, idVerified:false, bizVerified:false, available:false,
     lat:19.1345, lng:72.8320, categories:['electronics'],
-    serviceRadius:4, cancellations:1, noShows:0,
+    serviceRadius:4, newProvider:false, cancellations:1, noShows:0,
+  },
+  {
+    id:'prov5', userId:'p_s5', name:'Vikas Electric Works (New)', init:'VE',
+    specialties:['General wiring','Switchboard repair','Fan & light fittings'],
+    rating:4.2, totalJobs:2, distKm:1.8,
+    verified:false, idVerified:true, bizVerified:false, available:true,
+    lat:19.1380, lng:72.8290, categories:['electronics'],
+    serviceRadius:3, newProvider:true, visibilityCap:3, cancellations:0, noShows:0,
   },
 ];
 
@@ -138,7 +155,7 @@ export function currentUser() {
   return recall('users', []).find(u => u.id === s.userId) || null;
 }
 
-export function signup({ name, email, password, phone = '', role = 'customer', businessName = '' }) {
+export function signup({ name, email, password, phone = '', role = 'customer', businessName = '', specialties = [], categories = [] }) {
   const users = recall('users', []);
   if (users.find(u => u.email.toLowerCase() === email.trim().toLowerCase()))
     return { error: 'This email is already registered. Please log in.' };
@@ -153,19 +170,23 @@ export function signup({ name, email, password, phone = '', role = 'customer', b
     role,
     avatar: initials,
     address: '',
+    wallet: { balance: 500, holds: [] },
   };
   users.push(user);
   persist('users', users);
 
   if (role === 'provider') {
     const providers = recall('providers', []);
+    // §6.2: new providers get capped radius until 5 jobs & >= 4.0 rating
     providers.push({
       id: 'prov' + Date.now(), userId: user.id,
       name: businessName.trim() || name.trim(), init: initials,
-      specialties: [], rating: 0, totalJobs: 0, distKm: 0,
+      specialties, rating: 0, totalJobs: 0, distKm: 0,
       verified: false, idVerified: false, bizVerified: false, available: false,
-      lat: 0, lng: 0, categories: [],
-      serviceRadius: Config.defaultRadius, cancellations: 0, noShows: 0,
+      lat: 0, lng: 0, categories,
+      serviceRadius: Config.defaultRadius,
+      newProvider: true, visibilityCap: Config.newProviderRadius,
+      cancellations: 0, noShows: 0,
     });
     persist('providers', providers);
   }
@@ -256,6 +277,49 @@ export function getUserById(id) {
   return recall('users', []).find(u => u.id === id) || null;
 }
 
+// §6.2: Wallet hold/release for scheduled bookings (no-show protection)
+export function createHold(userId, amount, jobId) {
+  const users = recall('users', []);
+  const idx   = users.findIndex(u => u.id === userId);
+  if (idx < 0) return;
+  const w = users[idx].wallet || { balance: 500, holds: [] };
+  w.holds = (w.holds || []).filter(h => h.jobId !== jobId); // dedupe
+  w.holds.push({ jobId, amount, at: Date.now() });
+  users[idx].wallet = w;
+  persist('users', users);
+}
+
+export function releaseHold(userId, jobId, toProviderId = null) {
+  const users = recall('users', []);
+  const idx   = users.findIndex(u => u.id === userId);
+  if (idx < 0) return;
+  const w    = users[idx].wallet || { balance: 500, holds: [] };
+  const hold = (w.holds || []).find(h => h.jobId === jobId);
+  if (hold && toProviderId) w.balance = Math.max(0, (w.balance || 0) - hold.amount);
+  w.holds = (w.holds || []).filter(h => h.jobId !== jobId);
+  users[idx].wallet = w;
+  persist('users', users);
+}
+
+// §6.2: Check + auto-graduate new provider when threshold met
+export function checkProviderGraduation(provId) {
+  const provs = recall('providers', []);
+  const idx   = provs.findIndex(p => p.id === provId);
+  if (idx < 0) return;
+  const p = provs[idx];
+  if (p.newProvider && p.totalJobs >= Config.newProviderJobThreshold && p.rating >= Config.newProviderRatingThreshold) {
+    provs[idx] = { ...p, newProvider: false, serviceRadius: Config.defaultRadius };
+    persist('providers', provs);
+  }
+}
+
+// §2.2: Persist confirmation call event to job
+export function saveConfirmationCall(jobId, confirmedBy = 'provider') {
+  const job = getJob(jobId);
+  if (!job) return;
+  saveJob({ ...job, confirmationCall: { at: Date.now(), confirmedBy } });
+}
+
 /* ── Notifications ────────────────────────── */
 export function getNotifs(userId) { return recall('notifs_' + userId, []); }
 export function addNotif(userId, notif) {
@@ -289,23 +353,27 @@ export function saveDispute(dispute) {
 export function createDispute({ jobId, category, description, evidence = [] }) {
   const user = currentUser();
   const job = getJob(jobId);
+  // §6.4: count prior disputes against this provider for suspension threshold
+  const providerId = job?.providerId || null;
+  const priorDisputeCount = providerId
+    ? recall('disputes', []).filter(d => d.providerId === providerId && d.status !== 'under_review').length
+    : 0;
   const dispute = {
     id: 'disp' + Date.now(),
     jobId,
     customerId: user?.id || job?.customerId,
     customerName: user?.name || 'Customer',
-    providerId: job?.providerId || null,
+    providerId,
+    priorDisputeCount,
     category, // wrong_diagnosis, unexpected_charge, damage, poor_repair, no_show, other
     description,
     evidence,
-    status: 'under_review', // under_review, resolved, rejected
+    status: 'under_review', // under_review | resolved | partial_refund | provider_warning | rejected
     resolution: null,
     createdAt: Date.now(),
     date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   };
-  if (job) {
-    saveJob({ ...job, status: 'disputed' });
-  }
+  if (job) saveJob({ ...job, status: 'disputed' });
   return saveDispute(dispute);
 }
 
