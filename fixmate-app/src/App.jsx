@@ -8,7 +8,6 @@ import AppHeader from './components/AppHeader';
 // ── Lazy-loaded Route Components (Dynamic Code Splitting) ──────────
 const Login            = lazy(() => import('./screens/auth/Login'));
 const Signup           = lazy(() => import('./screens/auth/Signup'));
-const Splash           = lazy(() => import('./screens/Splash'));
 const Website          = lazy(() => import('./screens/public/Website'));
 
 // Customer
@@ -149,15 +148,11 @@ function AppLayout() {
   }
 
   // 2. Root Entry ('/') — Smart device-aware routing:
-  // Mobile device: show splash screen first (logo only), then advances to app
-  // Laptop / Desktop: opens the full marketing website (<Website />)
+  // Mobile: go straight to login (PWA manifest handles its own splash)
+  // Desktop: show full marketing website
   if (location.pathname === '/') {
     if (isMobileDevice()) {
-      return (
-        <Suspense fallback={<RouteLoader />}>
-          <Splash />
-        </Suspense>
-      );
+      return <Navigate to="/login" replace />;
     }
     return (
       <Suspense fallback={<RouteLoader />}>
@@ -166,17 +161,7 @@ function AppLayout() {
     );
   }
 
-  // 3. Mobile-only Splash Route
-  if (location.pathname === '/splash') {
-    if (!isMobileDevice()) {
-      return <Navigate to="/" replace />;
-    }
-    return (
-      <Suspense fallback={<RouteLoader />}>
-        <Splash />
-      </Suspense>
-    );
-  }
+  // 3. Remove /splash route entirely — not needed, PWA handles it
 
   // 4. Full-page Auth (Desktop & Mobile)
   if (location.pathname === '/login') {
