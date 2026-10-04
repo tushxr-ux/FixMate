@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -43,8 +43,70 @@ function isMobileDevice() {
   if (typeof window === 'undefined') return false;
   const ua = navigator.userAgent || navigator.vendor || window.opera || '';
   const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  const isSmallScreen = window.innerWidth <= 768;
+  // matchMedia is the most reliable way — innerWidth can be wrong before layout
+  const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
   return isMobileUA || isSmallScreen;
+}
+
+// PWA install prompt — shown once per device
+function InstallBanner() {
+  const [prompt, setPrompt] = window.__deferredInstallPrompt
+    ? [window.__deferredInstallPrompt, () => {}]
+    : [null, () => {}];
+  const [show, setShow] = React.useState(
+    () => !localStorage.getItem('pwa_install_dismissed') && isMobileDevice()
+  );
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      window.__deferredInstallPrompt = e;
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  if (!show) return null;
+
+  const dismiss = () => {
+    localStorage.setItem('pwa_install_dismissed', '1');
+    setShow(false);
+  };
+
+  const install = async () => {
+    const evt = window.__deferredInstallPrompt;
+    if (evt) {
+      evt.prompt();
+      await evt.userChoice;
+      window.__deferredInstallPrompt = null;
+    }
+    dismiss();
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+      background: '#1A56DB', color: '#fff',
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '14px 16px',
+      boxShadow: '0 -4px 24px rgba(0,0,0,0.18)',
+      fontFamily: 'Inter, sans-serif'
+    }}>
+      <img src="/fixmate-logo.webp" alt="" style={{ width: 36, height: 36, borderRadius: 8, flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 14 }}>Install FixMate App</div>
+        <div style={{ fontSize: 12, opacity: 0.85 }}>Add to home screen for the best experience</div>
+      </div>
+      <button onClick={install} style={{
+        background: '#fff', color: '#1A56DB', border: 'none',
+        borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0
+      }}>Install</button>
+      <button onClick={dismiss} style={{
+        background: 'transparent', color: '#fff', border: 'none',
+        fontSize: 20, cursor: 'pointer', padding: '0 4px', lineHeight: 1, flexShrink: 0
+      }} aria-label="Dismiss">×</button>
+    </div>
+  );
 }
 
 function RouteLoader() {
@@ -226,6 +288,7 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <AppLayout />
+          <InstallBanner />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

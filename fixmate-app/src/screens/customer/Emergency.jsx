@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { createJob } from '../../store';
 import TopBar from '../../components/TopBar';
 import { useToast } from '../../context/ToastContext';
+import HospitalLocator from '../../components/HospitalLocator';
 
 export default function Emergency() {
   const navigate  = useNavigate();
@@ -13,6 +14,7 @@ export default function Emergency() {
   const [selectedIssue, setSelectedIssue] = useState('');
   const [towDestination, setTowDestination] = useState('Nearest authorized workshop');
   const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [geoLoc, setGeoLoc] = useState(null); // {lat, lng} resolved for hospital search
 
   const issues = [
     { id: 'Battery dead',    label: 'Battery Dead',    icon: 'battery_alert',    desc: 'Jumpstart or battery check' },
@@ -200,7 +202,8 @@ export default function Emergency() {
         }}>
           <div style={{
             background: '#fff', borderRadius: 12, padding: 22, maxWidth: 360, width: '100%',
-            textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            maxHeight: '90vh', overflowY: 'auto'
           }}>
             <div style={{
               width: 54, height: 54, borderRadius: '50%', background: '#FEE2E2', color: '#DC2626',
@@ -228,6 +231,35 @@ export default function Emergency() {
               >
                 <span className="material-symbols-outlined">medical_services</span> Call 108 (Ambulance)
               </a>
+            </div>
+
+            {/* Nearby Hospitals */}
+            <div style={{ textAlign: 'left', marginBottom: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+              <p style={{ fontWeight: 700, fontSize: 12, margin: '0 0 8px', color: 'var(--text)' }}>Nearby hospitals</p>
+              {(() => {
+                const loc = geoLoc || (location.state?.location?.lat != null ? location.state.location : null);
+                if (loc) {
+                  return <HospitalLocator lat={loc.lat} lng={loc.lng} />;
+                }
+                return (
+                  <div>
+                    <p style={{ fontSize: 12, color: 'var(--gray)', margin: '0 0 8px' }}>Enable location to see nearby hospitals</p>
+                    <button
+                      className="btn btn-outline"
+                      style={{ fontSize: 12, padding: '6px 12px' }}
+                      onClick={() => {
+                        navigator.geolocation?.getCurrentPosition(
+                          pos => setGeoLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                          () => {}
+                        );
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>my_location</span>
+                      Use my location
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
 
             <button

@@ -157,7 +157,7 @@ export default function Login() {
             &ldquo;The technician showed me the photo diagnosis before fixing my washing machine. Super fair and transparent!&rdquo;
           </p>
           <div style={{ fontSize: 12, color: '#93C5FD', fontWeight: 600 }}>
-            — Aditi D., Verified Customer in Thakur Village, Kandivali
+            — Tushar S., Verified Customer in Thakur Village, Kandivali
           </div>
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function Login() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               <button
                 type="button"
-                onClick={() => handleDemoClick('aditi@demo.com', 'demo')}
+                onClick={() => handleDemoClick('tushar@demo.com', 'demo')}
                 disabled={loading}
                 style={{
                   background: '#FFFFFF',

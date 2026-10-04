@@ -1022,7 +1022,7 @@ export default function Website() {
           {[
             {
               quote: 'My washing machine broke down on a Sunday morning. The FixMate technician arrived in 18 minutes at Thakur Village, showed me the exact broken belt, and charged only ₹50 inspection + ₹380 for the genuine belt.',
-              name: 'Aditi Deshmukh',
+              name: 'Tushar Deshmukh',
               location: 'Thakur Village, Kandivali East, Mumbai',
               service: 'Washing Machine Repair',
               rating: 5

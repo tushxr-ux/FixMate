@@ -67,12 +67,12 @@ const drop = (key) => localStorage.removeItem(Config.NS + key);
 const SEED_USERS = [
   {
     id: 'u1',
-    name: 'Aditi Sharma',
-    email: 'aditi@demo.com',
+    name: 'Tushar Sharma',
+    email: 'tushar@demo.com',
     password: 'demo',
     phone: '+91 98765 43210',
     role: 'customer',
-    avatar: 'AS',
+    avatar: 'TS',
     address: 'Flat 402, Evershine Millennium Paradise, Thakur Village, Kandivali East, Mumbai',
     wallet: { balance: 500, holds: [] },
   },

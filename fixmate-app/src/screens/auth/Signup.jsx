@@ -246,7 +246,7 @@ export default function Signup() {
               <input
                 id="reg-name"
                 type="text"
-                placeholder="e.g. Aditi Sharma"
+                placeholder="e.g. Tushar Sharma"
                 value={name}
                 onChange={e => setName(e.target.value)}
               />

@@ -6,9 +6,6 @@ import { customerIcon, makeProviderIcon, makeEtaIcon } from '../../components/Ma
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
 
-// Mumbai customer location (Thakur Village, Kandivali East)
-const DEFAULT_CUSTOMER_LATLNG = [19.2085, 72.8735];
-
 // Interpolate between two [lat,lng] points by fraction t ∈ [0,1]
 function lerp([lat1, lng1], [lat2, lng2], t) {
   return [lat1 + (lat2 - lat1) * t, lng1 + (lng2 - lng1) * t];
@@ -32,16 +29,32 @@ export default function Tracking() {
   const [eta,     setEta]     = useState(6);
   const [arrived, setArrived] = useState(false);
 
-  // Provider start position — use seed coords if available, else offset from customer in Kandivali
-  const provStart = provider?.lat
-    ? [provider.lat, provider.lng]
-    : [19.2062, 72.8710];
+  // Real GPS → job location → static Mumbai fallback
+  const [customerLatLng, setCustomerLatLng] = useState(() =>
+    job?.location?.lat ? [job.location.lat, job.location.lng] : [19.2085, 72.8735]
+  );
+
+  // Try to get actual device GPS on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => setCustomerLatLng([pos.coords.latitude, pos.coords.longitude]),
+      () => { /* keep stored/default */ },
+      { timeout: 6000, maximumAge: 30000 }
+    );
+  }, []);
+
 
   useEffect(() => {
     if (!mapDivRef.current || mapRef.current) return;
 
+    // Provider start: seeded coords or small offset from real customer position
+    const provStart = provider?.lat
+      ? [provider.lat, provider.lng]
+      : [customerLatLng[0] - 0.004, customerLatLng[1] - 0.006];
+
     const map = L.map(mapDivRef.current, {
-      center: CUSTOMER_LATLNG,
+      center: customerLatLng,
       zoom: 14,
       zoomControl: true,
     });
@@ -52,12 +65,12 @@ export default function Tracking() {
     }).addTo(map);
 
     // Customer marker
-    L.marker(CUSTOMER_LATLNG, { icon: customerIcon })
+    L.marker(customerLatLng, { icon: customerIcon })
       .addTo(map)
       .bindPopup('<strong>Your location</strong>');
 
     // Dashed route line
-    const poly = L.polyline([provStart, CUSTOMER_LATLNG], {
+    const poly = L.polyline([provStart, customerLatLng], {
       color: '#1A56DB', weight: 3, dashArray: '8 8', opacity: 0.65,
     }).addTo(map);
     polylineRef.current = poly;
@@ -84,7 +97,7 @@ export default function Tracking() {
     intervalRef.current = setInterval(() => {
       step++;
       const t = Math.min(step / STEPS, 1);
-      const pos = lerp(provStart, CUSTOMER_LATLNG, t);
+      const pos = lerp(provStart, customerLatLng, t);
 
       pMarker.setLatLng(pos);
       eMarker.setLatLng(pos);
@@ -106,7 +119,8 @@ export default function Tracking() {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [customerLatLng]);
+
 
   if (!job) { navigate('/home'); return null; }
 
