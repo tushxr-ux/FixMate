@@ -147,15 +147,16 @@ export default function LocationPicker() {
       </div>
 
       {/* Map */}
-      <div className="map-area" style={{ margin: '10px 16px 0', flex: 1, minHeight: 320 }}>
+      <div className="map-area" style={{ margin: '10px 16px 0', flex: 1, minHeight: 340, position: 'relative' }}>
         <MapView
           ref={mapRef}
           center={[pin.lat, pin.lng]}
           zoom={15}
-          height="100%"
+          height="320px"
           style={{ borderRadius: 'var(--r-lg)' }}
           markers={markers}
           onClick={handleMapClick}
+          onReady={map => setTimeout(() => map.invalidateSize(), 100)}
         />
 
         {/* "Tap to place pin" hint */}
