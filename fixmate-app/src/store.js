@@ -373,11 +373,11 @@ const SEED_JOBS = [
 
 /* ── Init (seed once) ─────────────────────── */
 export function initStore() {
-  if (!recall('seeded_mumbai_kandivali_v2')) {
+  if (!recall('seeded_mumbai_kandivali_v3')) {
     persist('users',     SEED_USERS);
     persist('providers', SEED_PROVIDERS);
     persist('jobs',      SEED_JOBS);
-    persist('seeded_mumbai_kandivali_v2', true);
+    persist('seeded_mumbai_kandivali_v3', true);
   }
 }
 
