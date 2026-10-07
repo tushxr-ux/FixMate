@@ -1,12 +1,14 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getJob, getProviders, saveJob } from '../../store';
 import MapView, { customerIcon, makeProviderIcon } from '../../components/MapView';
 import TopBar from '../../components/TopBar';
+import { useToast } from '../../context/ToastContext';
 
 export default function Matching() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
+  const toast     = useToast();
   const mapRef    = useRef(null);
 
   const [phase,     setPhase]     = useState('broadcasting'); // broadcasting | found
@@ -41,6 +43,22 @@ export default function Matching() {
       }
       setAccepted([matched]);
       setPhase('found');
+
+      // In-app toast notification
+      toast.success(`${matched.name} accepted your request! They're on their way.`, 5000);
+
+      // Web / system notification (shows on phone lock screen if permission granted)
+      const fireSystemNotif = () => {
+        new Notification('Provider Accepted! 🔧', {
+          body: `${matched.name} (${matched.rating}★) is heading to you.`,
+          icon: '/fixmate-icon.png',
+        });
+      };
+      if (Notification.permission === 'granted') {
+        fireSystemNotif();
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(p => { if (p === 'granted') fireSystemNotif(); });
+      }
 
       // Advance to assigned screen after showing acceptance for 1.5s
       setTimeout(() => {
