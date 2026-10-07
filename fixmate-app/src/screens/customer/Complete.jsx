@@ -12,9 +12,11 @@ export default function Complete() {
   const toast       = useToast();
   const job         = getJob(jobId);
 
-  const [rating,   setRating]  = useState(5);
+  const [rating,   setRating]  = useState(0);
+  const [comment,  setComment] = useState('');
   const [paying,   setPaying]  = useState(false);
   const [paid,     setPaid]    = useState(false);
+  const [showRate, setShowRate] = useState(false);
   const [method,   setMethod]  = useState('upi');
 
   if (!job) { navigate('/home'); return null; }
@@ -23,18 +25,21 @@ export default function Complete() {
     setPaying(true);
     await new Promise(r => setTimeout(r, 900));
     const txnId = 'TXN' + Date.now().toString(36).toUpperCase();
-    const updated = {
-      ...job,
-      status: 'completed',
-      rating,
-      paymentMethod: method,
-      txnId,
-      paidAt: Date.now()
-    };
+    const updated = { ...job, status: 'completed', paymentMethod: method, txnId, paidAt: Date.now() };
     saveJob(updated);
-    setPaid(true);
     setPaying(false);
-    toast.success('Payment successful! Transaction recorded.');
+    setPaid(true);
+    toast.success('Payment successful! Please rate your experience.');
+    setShowRate(true); // auto-prompt rating modal
+  }
+
+  function submitRating() {
+    if (rating > 0) {
+      const updated = getJob(jobId);
+      if (updated) saveJob({ ...updated, rating, reviewComment: comment.trim() });
+      toast.success('Thank you for your review!');
+    }
+    setShowRate(false);
   }
 
   const METHODS = [
@@ -44,7 +49,7 @@ export default function Complete() {
     { id:'cash',   label:'Cash on Spot',  icon:'payments' },
   ];
 
-  if (paid) {
+  if (paid && !showRate) {
     return (
       <div style={{ display:'flex', flexDirection:'column', flex:1 }}>
         <TopBar title="Payment successful" back={false} />
@@ -99,8 +104,60 @@ export default function Complete() {
           ))}
         </div>
 
-        <p className="section-title">Rate your provider</p>
-        <Stars initial={5} onChange={setRating} />
+        {/* Rating modal — slides up automatically after payment */}
+        {showRate && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 1000,
+          }}>
+            <div style={{
+              background: '#fff', borderRadius: '20px 20px 0 0',
+              padding: '28px 24px 40px', width: '100%', maxWidth: 480,
+              boxShadow: '0 -8px 32px rgba(0,0,0,.18)',
+            }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%', background: '#EFF6FF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 12px',
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 30, color: 'var(--blue)' }}>star</span>
+                </div>
+                <h3 style={{ margin: '0 0 4px', fontSize: 18 }}>How was your experience?</h3>
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>Your rating helps us keep quality high</p>
+              </div>
+
+              <Stars initial={0} onChange={setRating} />
+
+              <textarea
+                placeholder="Leave a comment (optional) — e.g. very professional, arrived on time"
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                style={{
+                  width: '100%', marginTop: 16, padding: '10px 12px', borderRadius: 8,
+                  border: '1px solid var(--border)', fontSize: 13, resize: 'none', minHeight: 72,
+                  fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+              />
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button className="btn btn-ghost" style={{ flex: 1, fontSize: 13 }} onClick={submitRating}>
+                  Skip
+                </button>
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 2 }}
+                  onClick={submitRating}
+                  disabled={rating === 0}
+                >
+                  <span className="material-symbols-outlined">star</span>
+                  Submit Review
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <button
           className={`btn btn-primary${paying?' loading':''}`}
