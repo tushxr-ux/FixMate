@@ -14,11 +14,14 @@ export default function Home() {
 
   // Flat list of all items across all categories for suggestions
   const allItems = CATEGORIES.flatMap(cat =>
-    cat.items.map(item => ({ label: item.n, categoryId: cat.id, categoryName: cat.name }))
+    cat.items.map(item => ({ label: item.n, categoryId: cat.id, categoryName: cat.name, keywords: item.k || [] }))
   );
 
   const suggestions = query.trim().length > 0
-    ? allItems.filter(s => s.label.toLowerCase().includes(query.toLowerCase())).slice(0, 7)
+    ? allItems.filter(s => {
+        const q = query.toLowerCase();
+        return s.label.toLowerCase().includes(q) || s.keywords.some(kw => kw.toLowerCase().includes(q));
+      }).slice(0, 8)
     : [];
 
   function handleSuggestionPick(s) {
