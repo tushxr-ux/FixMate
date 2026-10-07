@@ -1,4 +1,4 @@
-﻿/* FixMate — Data Store + Persistence
+/* FixMate — Data Store + Persistence
    All data ops go through this module.
    Uses localStorage — no backend needed for demo.
    ─────────────────────────────────────────────── */
@@ -501,9 +501,20 @@ export function createJob(data) {
 }
 
 /* ── Providers ────────────────────────────── */
+// Map new category IDs to provider capability tags
+const CAT_ALIAS = {
+  'tech-gadgets': 'electronics',
+  'home-works':   'electronics', // closest match until home-works providers are seeded
+  'electrician':  'electronics',
+  'carpentry':    'electronics',
+};
+
 export function getProviders(filter = {}) {
   let provs = recall('providers', []);
-  if (filter.category) provs = provs.filter(p => p.categories.includes(filter.category));
+  if (filter.category) {
+    const cat = CAT_ALIAS[filter.category] || filter.category;
+    provs = provs.filter(p => p.categories.includes(cat));
+  }
   if (filter.available !== undefined) provs = provs.filter(p => p.available === filter.available);
   return provs.sort((a, b) => a.distKm - b.distKm);
 }
