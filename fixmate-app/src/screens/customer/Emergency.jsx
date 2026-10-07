@@ -19,7 +19,7 @@ export default function Emergency() {
   const issues = [
     { id: 'Battery dead',    label: 'Battery Dead',    icon: 'battery_alert',    desc: 'Jumpstart or battery check' },
     { id: 'Tyre puncture',   label: 'Tyre Puncture',   icon: 'tire_repair',      desc: 'Stepney change or puncture fix' },
-    { id: 'Fuel out',        label: 'Ran Out of Fuel', icon: 'local_gas_station',desc: 'Tow to nearest petrol pump' },
+    { id: 'Fuel out',        label: 'Ran Out of Fuel', icon: 'local_gas_station',desc: 'Tow to petrol pump — no fuel delivery' },
     { id: 'Towing',          label: 'Towing Needed',   icon: 'local_shipping',   desc: 'Flatbed or chain tow to garage' },
     { id: 'Engine fault',    label: 'Engine Breakdown',icon: 'build',            desc: 'Overheating, clutch, or starting issue' },
     { id: 'Collision / SOS', label: 'Collision / SOS', icon: 'e911_emergency',   desc: 'Accident or active danger' },
@@ -162,7 +162,7 @@ export default function Emergency() {
             </strong>
             {selectedIssue === 'Fuel out' && (
               <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--gray)', lineHeight: 1.4 }}>
-                FixMate tows your vehicle to a licensed petrol pump (Section 5.9 — fuel delivery in unapproved containers is prohibited for legal &amp; fire safety compliance).
+                ⚠️ FixMate does <strong>not deliver fuel</strong>. We tow your vehicle to the nearest licensed petrol pump (HP / IndianOil / BPCL). Towing fee ₹99 applies.
               </p>
             )}
             <input

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getJobs, getProvider, CATEGORIES } from '../../store';
@@ -6,6 +7,26 @@ import BottomTabs from '../../components/BottomTabs';
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Search state
+  const [query, setQuery]   = useState('');
+  const [focused, setFocused] = useState(false);
+
+  // Flat list of all items across all categories for suggestions
+  const allItems = CATEGORIES.flatMap(cat =>
+    cat.items.map(item => ({ label: item.n, categoryId: cat.id, categoryName: cat.name }))
+  );
+
+  const suggestions = query.trim().length > 0
+    ? allItems.filter(s => s.label.toLowerCase().includes(query.toLowerCase())).slice(0, 7)
+    : [];
+
+  function handleSuggestionPick(s) {
+    setQuery('')
+    setFocused(false);
+    if (s.label === 'EMERGENCY') { navigate('/emergency'); return; }
+    navigate(`/request/${s.categoryId}/${encodeURIComponent(s.label)}`);
+  }
 
   const allJobs = user ? getJobs({ customerId: user.id }) : [];
   const activeJob = allJobs.find(j => !['completed', 'cancelled', 'disputed'].includes(j.status));
@@ -50,21 +71,57 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Interactive Search Bar */}
-          <div className="search-bar" onClick={() => navigate('/items/electronics')}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--blue)', fontSize: 22 }}>search</span>
-            <input
-              type="text"
-              readOnly
-              placeholder="Search for AC service, plumber, bike repair, electrician, washing machine..."
-              style={{ cursor: 'pointer' }}
-            />
-            <button
-              className="btn btn-primary btn-sm"
-              style={{ borderRadius: 8, padding: '6px 14px', fontSize: 13 }}
-            >
-              Search
-            </button>
+          {/* Interactive Search Bar with Live Suggestions */}
+          <div style={{ position: 'relative', marginBottom: 4 }}>
+            <div className="search-bar" style={{ cursor: 'default' }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--blue)', fontSize: 22 }}>search</span>
+              <input
+                type="text"
+                placeholder="Search: AC, mobile screen, plumber, bike service…"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setTimeout(() => setFocused(false), 150)}
+                style={{ cursor: 'text' }}
+                autoComplete="off"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--gray)' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+                </button>
+              )}
+            </div>
+
+            {/* Suggestions dropdown */}
+            {focused && suggestions.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                background: '#fff', border: '1px solid var(--border)', borderRadius: 10,
+                boxShadow: '0 8px 24px rgba(0,0,0,.1)', overflow: 'hidden', marginTop: 4,
+              }}>
+                {suggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    onMouseDown={() => handleSuggestionPick(s)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 14px', cursor: 'pointer', borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F0F7FF'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--blue)' }}>search</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{s.label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--gray)' }}>{s.categoryName}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Category Explorer Title */}
