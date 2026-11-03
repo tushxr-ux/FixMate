@@ -64,6 +64,16 @@ function InstallBanner() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
+  // Hooks must run unconditionally, before the early return below:
+  // on the three tabbed screens (Home/History/Profile) the fixed
+  // bottom-tabs occupy ~72px at the viewport bottom. A banner pinned
+  // to bottom:0 would cover them. So on those routes the banner floats
+  // above the tabs; everywhere else (Request, LocationPicker, auth…)
+  // it stays pinned to the bottom, clear of the .body 84px padding.
+  const { pathname } = useLocation();
+  const hasBottomTabs = ['/home', '/history', '/profile'].includes(pathname);
+  const bannerBottom = hasBottomTabs ? 'calc(72px + var(--safe-b, 0px))' : 0;
+
   if (!show) return null;
 
   const dismiss = () => {
@@ -83,7 +93,7 @@ function InstallBanner() {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+      position: 'fixed', bottom: bannerBottom, left: 0, right: 0, zIndex: 9999,
       background: '#1A56DB', color: '#fff',
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '14px 16px',

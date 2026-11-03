@@ -143,6 +143,28 @@ button {
   justify-content: center;
 }
 
+/* ── Icon-size standard ──────────────────────────────────────
+   Buttons and rows previously mixed inline icon sizes (13–36px),
+   which made buttons look mismatched across screens. These rules
+   are the single standard; !important is deliberate here because
+   many icons still carry inline fontSize styles, which would
+   otherwise beat a plain class rule. Deliberate large icons are
+   NOT in these contexts and keep their own sizes: .pulse-ring
+   (42px), .big-icon (36px), .item-card (28px) and rating stars.
+   ── Standard ──
+   .btn icons 20px · .btn-sm icons 18px · .icon-btn (TopBar) 22px
+   .tab-btn (bottom tabs) 24px · .location-pill 16px
+   .search-bar rows 20px · .my-location-btn 20px
+   .verify-chip 14px · other row/chip icons 16–18px (inline) */
+.btn .material-symbols-outlined { font-size: 20px !important; }
+.btn-sm .material-symbols-outlined { font-size: 18px !important; }
+.icon-btn .material-symbols-outlined { font-size: 22px !important; }
+.tab-btn .material-symbols-outlined { font-size: 24px !important; }
+.location-pill .material-symbols-outlined { font-size: 16px !important; }
+.search-bar .material-symbols-outlined { font-size: 20px !important; }
+.my-location-btn .material-symbols-outlined { font-size: 20px !important; }
+.verify-chip .material-symbols-outlined { font-size: 14px !important; }
+
 
 /* ── Modern Web App Shell (Full Desktop & Fluid Mobile) ───── */
 .web-app-shell {
@@ -1759,6 +1781,10 @@ input:checked ~ .toggle-track::before {
     grid-template-columns: 1fr;
   }
   .body {
-    padding: 14px;
+    /* NOTE: padding-bottom must stay 84px on small phones too. The
+       previous `padding: 14px` shorthand reset it to 14px, so the
+       fixed bottom-tabs covered the last content (incl. buttons)
+       on screens <= 480px wide. */
+    padding: 14px 14px 84px;
   }
 }
