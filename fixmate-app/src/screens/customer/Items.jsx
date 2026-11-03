@@ -34,22 +34,30 @@ export default function Items() {
 
         <div className="item-grid">
           {cat.items.map(item => (
-            <div key={item.n} className="item-card" onClick={() => handleItem(item)}>
-              <span className="material-symbols-outlined"
-                style={{ color: item.n === 'EMERGENCY' ? 'var(--red)' : 'var(--blue)' }}>
-                {item.i}
+            <button key={item.n} type="button" className="item-card"
+              aria-label={`${item.n} — book a repair`}
+              onClick={() => handleItem(item)}>
+              <span className="item-icon">
+                <span className="material-symbols-outlined"
+                  style={{ color: item.n === 'EMERGENCY' ? 'var(--red)' : 'var(--blue)' }}>
+                  {item.i}
+                </span>
               </span>
               <span className="label" style={{ color: item.n === 'EMERGENCY' ? 'var(--red)' : 'inherit' }}>
                 {item.n}
               </span>
-            </div>
+            </button>
           ))}
         </div>
 
-        <div className="search-bar">
+        {/* Previously a non-interactive div that looked tappable but did
+            nothing. Now a real button opening a generic request form. */}
+        <button type="button" className="search-bar" style={{ width: '100%', textAlign: 'left' }}
+          aria-label="Describe an issue not listed here"
+          onClick={() => navigate(`/request/${cat.id}/${encodeURIComponent('Other Issue')}`)}>
           <span className="material-symbols-outlined">search</span>
           <span>Not listed? Describe your issue…</span>
-        </div>
+        </button>
       </div>
     </div>
   );
