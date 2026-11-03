@@ -371,6 +371,27 @@ const SEED_JOBS = [
   },
 ];
 
+/* ── Demo login accounts for the seeded providers ────────────
+   BUG (found Nov 2026 QA): SEED_PROVIDERS prov2–prov7 were created
+   with userIds (p_s2…p_s7) that had NO matching user record, so no one
+   could ever log in as them. Matching auto-assigns the nearest
+   available provider — prov6 for electronics, prov2 for mechanic /
+   roadside, prov3 for plumbing — so every auto-matched job was assigned
+   to a provider account that cannot log in, and the only loginnable
+   provider (Rakesh, prov1) never saw the job on his Dashboard. That is
+   why "provider accept nhi kr raha hai". These demo accounts (password
+   'demo', same as the other demo logins) close that gap. Phones are
+   left blank on purpose: no invented numbers — the Call button stays
+   disabled for these providers until a real number is stored. */
+const PROVIDER_DEMO_USERS = [
+  { id: 'p_s2', name: 'Kandivali 24/7 Roadside SOS & Towing', email: 'roadside@demo.com',  password: 'demo', phone: '', role: 'provider', avatar: 'KR', address: 'Highway Service Bay, Near Thakur Complex Flyover, WEH, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s3', name: 'Iqbal Plumbing & Sanitary Works',     email: 'plumbing@demo.com',  password: 'demo', phone: '', role: 'provider', avatar: 'IP', address: 'Shop 4, Gayatri Satsang Bldg, Thakur Complex, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s4', name: 'Mahavir Nagar Appliance Care Centre', email: 'appliance@demo.com', password: 'demo', phone: '', role: 'provider', avatar: 'MA', address: 'Shop 7, Panchsheel Heights, Mahavir Nagar, Kandivali West, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s5', name: 'Charkop Moto Clinic & Scooter Rescue', email: 'moto@demo.com',      password: 'demo', phone: '', role: 'provider', avatar: 'CM', address: 'Sector 8 Market, Near Charkop Police Station, Kandivali West, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s6', name: 'Evershine Quick Fix Electricals (New)', email: 'evershine@demo.com', password: 'demo', phone: '', role: 'provider', avatar: 'EQ', address: 'Opp. Dream Park Main Gate, Thakur Village, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s7', name: 'Akurli Fast Towing & Mobile Garage',   email: 'towing@demo.com',    password: 'demo', phone: '', role: 'provider', avatar: 'AF', address: 'Near Growel\'s 101 Mall, Akurli Road, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+];
+
 /* ── Init (seed once) ─────────────────────── */
 export function initStore() {
   if (!recall('seeded_mumbai_kandivali_v3')) {
@@ -379,6 +400,15 @@ export function initStore() {
     persist('jobs',      SEED_JOBS);
     persist('seeded_mumbai_kandivali_v3', true);
   }
+  // Non-destructive migration: append the missing provider demo
+  // accounts above to already-seeded devices. Never touches jobs,
+  // providers, or existing users — only adds accounts that are absent.
+  const users = recall('users', []);
+  let changed = false;
+  for (const pu of PROVIDER_DEMO_USERS) {
+    if (!users.find(u => u.id === pu.id)) { users.push(pu); changed = true; }
+  }
+  if (changed) persist('users', users);
 }
 
 
@@ -554,6 +584,15 @@ export function getProviders(filter = {}) {
 
 export function getProvider(id) {
   return recall('providers', []).find(p => p.id === id) || null;
+}
+
+// Does this provider serve this job category? Uses the same alias map
+// as getProviders, so 'home-works' jobs match 'electronics' providers
+// and 'tech-gadgets' jobs match 'electronics' providers.
+export function providerServesCategory(provider, category) {
+  if (!provider || !category) return false;
+  const cat = CAT_ALIAS[category] || category;
+  return (provider.categories || []).includes(cat);
 }
 
 // Provider phone for the Call button: seeded provider records carry no

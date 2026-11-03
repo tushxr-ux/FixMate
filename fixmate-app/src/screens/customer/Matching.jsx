@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProviders, saveJob } from '../../store';
+import { getJob, getProviders, getUserById, saveJob } from '../../store';
 import MapView, { customerIcon, makeProviderIcon } from '../../components/MapView';
 import TopBar from '../../components/TopBar';
 import { useToast } from '../../context/ToastContext';
@@ -23,9 +23,21 @@ export default function Matching() {
     if (!j) { navigate('/home'); return; }
     setJob(j);
 
-    // All available providers for this category
-    const provs = getProviders({ category: j.category, available: true });
+    // All available providers for this category, nearest first.
+    // Guard (Nov 2026 QA): never auto-assign to a provider record with
+    // no login account — that silently assigned every job to a provider
+    // who could never open it, so "provider accept nhi kr raha hai".
+    // With the seeded demo accounts in place this filter changes nothing
+    // for the demo data; it only protects against future ghost records.
+    const allAvailable = getProviders({ category: j.category, available: true });
+    const provs = allAvailable.filter(p => getUserById(p.userId));
     setAllProvs(provs);
+    if (provs.length === 0) {
+      // No loginnable provider at all: say so honestly instead of
+      // assigning a ghost provider the customer can never reach.
+      navigate(`/no-provider?jobId=${jobId}`);
+      return;
+    }
 
     // Simulate broadcast: notify providers one by one every ~600ms
     let notifiedSoFar = 0;
