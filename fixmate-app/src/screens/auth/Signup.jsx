@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { CATEGORIES } from '../../store';
 
 // §6.2: sub-skill menu — flat list so provider just checks what they know
 const PROVIDER_SKILLS = [
@@ -22,7 +23,17 @@ export default function Signup() {
   const [role, setRole] = useState('customer');
   const [bizName, setBizName] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
+  // Service categories (Nov 2026 QA): signup previously never passed
+  // categories, so a new provider was created with categories: [] and
+  // could never match any job — Matching and open requests both filter
+  // by category, so the provider was invisible forever. Categories are
+  // now chosen here and passed to signup().
+  const [selectedCats, setSelectedCats] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
+
+  function toggleCat(id) {
+    setSelectedCats(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -36,10 +47,14 @@ export default function Signup() {
     if (!name.trim()) { setError('Please enter your full name.'); return; }
     if (!email.trim()) { setError('Please enter your email address.'); return; }
     if (password.length < 4) { setError('Password must be at least 4 characters.'); return; }
+    if (role === 'provider' && selectedCats.length === 0) {
+      setError('Please select at least one service category you work in.');
+      return;
+    }
 
     setLoading(true);
     await new Promise(r => setTimeout(r, 500));
-    const result = signup({ name, email, password, phone, role, businessName: bizName, specialties: selectedSkills });
+    const result = signup({ name, email, password, phone, role, businessName: bizName, specialties: selectedSkills, categories: selectedCats });
     setLoading(false);
 
     if (result.error) { setError(result.error); return; }
@@ -262,6 +277,24 @@ export default function Signup() {
                   value={bizName}
                   onChange={e => setBizName(e.target.value)}
                 />
+              </div>
+            )}
+
+            {/* Service categories — required: without these, no job
+                can ever match this provider. */}
+            {role === 'provider' && (
+              <div className="field">
+                <label>Service Categories <span style={{ fontWeight:400, fontSize:11, color:'var(--gray)' }}>(select all you work in)</span></label>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:4 }}>
+                  {CATEGORIES.map(c => (
+                    <button
+                      key={c.id} type="button"
+                      onClick={() => toggleCat(c.id)}
+                      className={selectedCats.includes(c.id) ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                      style={{ fontSize:11 }}
+                    >{c.name}</button>
+                  ))}
+                </div>
               </div>
             )}
 

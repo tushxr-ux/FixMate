@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getJob, getProvider, getDisputes, fmt } from '../../store';
 import TopBar from '../../components/TopBar';
 import LineItems from '../../components/LineItems';
+import VisitOtpCard from '../../components/VisitOtpCard';
 
 export default function JobDetail() {
   const { jobId } = useParams();
@@ -79,6 +80,11 @@ export default function JobDetail() {
             )}
           </div>
         )}
+
+        {/* Visit OTP — also shown here (not only on ProviderAssigned /
+            Tracking) so customers can find the code for jobs a provider
+            accepted directly, e.g. from the Dashboard open requests. */}
+        {job.otp && ['matched', 'accepted', 'diagnosing', 'quote_sent', 'in_progress'].includes(job.status) && <VisitOtpCard job={job} />}
 
         {/* Photo the customer attached on the Request screen */}
         {job.photoName && (
