@@ -12,10 +12,51 @@ import TopBar from '../../components/TopBar';
 // Router state is still honoured as a second source, in both shapes:
 //  the current contract { forwardState, location } AND the old spread
 //  shape { desc, mode, schedAt, photo, location } from LocationPicker.
-// A photo data-URL is stored only for files <= 1 MB (base64 inflates
-// size ~33%, and sessionStorage is typically ~5 MB); larger photos keep
-// their filename only, so the draft can never blow up storage.
+// A photo preview is COMPRESSED (max 800px, JPEG 0.7) before it is
+// stored, so a 3–6 MB phone photo becomes a ~50–150 KB preview instead
+// of a ~1.3 MB+ data URL. Uncompressed previews used to accumulate in
+// localStorage (one per photo booking, never pruned) until the store
+// hit its ~5 MB quota — then the booking write silently failed and
+// Matching bounced the customer back to /home ("screen exits after
+// attaching a photo"). If compression fails, small files (<= 1 MB)
+// fall back to a raw data URL and larger files keep their filename
+// only, with a note — the booking itself is never dropped for a photo.
 const MAX_PHOTO_DATA_URL_BYTES = 1024 * 1024;
+
+// Downscale an image file to a small JPEG data URL (max 800px on the
+// long edge, quality 0.7). Resolves null on any failure so callers can
+// fall back instead of crashing the booking flow.
+function compressImage(file) {
+  return new Promise((resolve) => {
+    if (!file.type || !file.type.startsWith('image/')) return resolve(null);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      try {
+        const MAX = 800;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (!blob) return resolve(null);
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.7);
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
 
 function draftKey(categoryId, itemName) {
   return `fixmate:request-draft:${categoryId || ''}:${itemName || ''}`;
@@ -57,6 +98,7 @@ export default function Request() {
   const [schedAt, setSchedAt] = useState(initial.schedAt);
   const [photo,   setPhoto]   = useState(initial.photo);
   const [photoDataUrl, setPhotoDataUrl] = useState(initial.photoDataUrl);
+  const [photoNote, setPhotoNote] = useState('');
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -86,18 +128,28 @@ export default function Request() {
 
   const decodedItem = decodeURIComponent(itemName || '');
 
-  function handlePhoto(e) {
+  async function handlePhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
     setPhoto(file.name);
+    setPhotoDataUrl(null);
+    setPhotoNote('');
+    // Compress first: a phone photo of any size becomes a small preview.
+    const compressed = await compressImage(file);
+    if (compressed) {
+      setPhotoDataUrl(compressed);
+      return;
+    }
+    // Compression failed (non-image file, corrupt data, no canvas):
+    // small files still get a raw preview; larger files keep only the
+    // filename, and the user is told so — never a silent drop.
     if (file.size <= MAX_PHOTO_DATA_URL_BYTES) {
       const reader = new FileReader();
       reader.onload = () => setPhotoDataUrl(reader.result);
       reader.onerror = () => setPhotoDataUrl(null);
       reader.readAsDataURL(file);
     } else {
-      // Large photo: keep the name only, so the draft stays small.
-      setPhotoDataUrl(null);
+      setPhotoNote('Preview could not be stored for this photo — the filename is kept with your booking.');
     }
   }
 
@@ -124,9 +176,10 @@ export default function Request() {
       mode,
       scheduledTime: mode === 'scheduled' ? schedAt : null,
       location: pickedLocation,
-      // Photo is stored on the job record (name always, preview only if
-      // small enough). It is never uploaded to a server — this app has
-      // no backend; the preview lives in localStorage with the job.
+      // Photo is stored on the job record (name always, compressed
+      // preview when available). It is never uploaded to a server —
+      // this app has no backend; the preview lives in localStorage
+      // with the job.
       photoName: photo,
       photo: photoDataUrl,
     });
@@ -138,7 +191,16 @@ export default function Request() {
     }
 
     setLoading(false);
-    if (!job) { setError('Please log in to book a job.'); return; }
+    if (!job) {
+      // createJob returns null only when the booking could not be
+      // persisted at all (e.g. storage full even without the photo) or
+      // there is no logged-in user. Say so honestly instead of
+      // navigating to a Matching screen that would bounce home.
+      setError(currentUser()
+        ? 'Booking could not be saved — your device storage may be full. Please try again without a photo.'
+        : 'Please log in to book a job.');
+      return;
+    }
     // Draft is cleared ONLY here, on successful submit.
     try { sessionStorage.removeItem(key); } catch { /* ignore */ }
     navigate(`/matching/${job.id}`);
@@ -171,6 +233,9 @@ export default function Request() {
           </div>
           {photoDataUrl && (
             <img src={photoDataUrl} alt="Attached issue preview" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, marginTop: 8, border: '1px solid var(--border)' }} />
+          )}
+          {photoNote && (
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0' }}>{photoNote}</p>
           )}
           <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display: 'none' }} />
         </div>

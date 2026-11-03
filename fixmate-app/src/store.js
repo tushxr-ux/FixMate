@@ -507,6 +507,20 @@ export function generateVisitOtp() {
   return String(1000 + Math.floor(Math.random() * 9000));
 }
 
+// Guarantee a visit OTP for a job that already has a provider but
+// somehow has no code (e.g. a job accepted before OTP existed, or a
+// save that predates the OTP branch). Idempotent: if the job already
+// has a code, it is returned untouched; otherwise exactly one code is
+// generated and persisted. Customer screens call this on first view so
+// a matched/accepted job NEVER shows the customer an empty OTP area —
+// the fallback generates the code rather than showing nothing. The
+// code is still an in-app code only, never sent by SMS.
+export function ensureVisitOtp(job) {
+  if (!job || job.otp || !job.providerId) return job;
+  if (!['matched', 'accepted', 'diagnosing', 'quote_sent', 'in_progress'].includes(job.status)) return job;
+  return saveJob({ ...job, otp: generateVisitOtp(), otpVerified: false });
+}
+
 export function saveJob(job) {
   const jobs = recall('jobs', []);
   const idx = jobs.findIndex(j => j.id === job.id);
@@ -560,7 +574,19 @@ export function createJob(data) {
     revisions: [], location: data.location || defaultLoc, quoteAccepted: false,
     createdAt: Date.now(),
   };
-  return saveJob(job);
+  const saved = saveJob(job);
+  // Verify the write actually landed. persist() swallows storage-quota
+  // errors, so without this check a booking made when localStorage is
+  // nearly full (e.g. after several photo bookings) would silently
+  // vanish: Matching would then find no job and bounce the customer
+  // back to /home — the "screen exits after attaching a photo" bug.
+  // If the write failed, retry WITHOUT the photo preview (the filename
+  // is kept) so the booking itself is never lost. If even that fails,
+  // return null so the Request screen can show an honest error instead
+  // of navigating to a Matching screen that will bounce home.
+  if (getJob(saved.id)) return saved;
+  const stripped = saveJob({ ...saved, photo: null });
+  return getJob(stripped.id) ? stripped : null;
 }
 
 /* ── Providers ────────────────────────────── */
