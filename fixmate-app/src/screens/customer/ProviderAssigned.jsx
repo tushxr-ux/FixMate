@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProvider, getProviderPhone, saveConfirmationCall } from '../../store';
+import { getJob, getProvider, getProviderPhone, ensureVisitOtp, saveConfirmationCall } from '../../store';
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
 import VisitOtpCard from '../../components/VisitOtpCard';
@@ -8,7 +8,9 @@ import VisitOtpCard from '../../components/VisitOtpCard';
 export default function ProviderAssigned() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
-  const [job, setJob] = useState(() => getJob(jobId));
+  // Fallback: if this matched/accepted job somehow has no OTP yet,
+  // generate one now (once, persisted) instead of showing no OTP area.
+  const [job, setJob] = useState(() => ensureVisitOtp(getJob(jobId)));
   const provider  = job ? getProvider(job.providerId) : null;
   // Call = plain tel: link to the provider's stored number (no telephony
   // service). Seeded provider records have no phone field; the number

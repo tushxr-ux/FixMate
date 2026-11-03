@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProvider, getDisputes, fmt } from '../../store';
+import { getJob, getProvider, getDisputes, ensureVisitOtp, fmt } from '../../store';
 import TopBar from '../../components/TopBar';
 import LineItems from '../../components/LineItems';
 import VisitOtpCard from '../../components/VisitOtpCard';
@@ -7,7 +8,9 @@ import VisitOtpCard from '../../components/VisitOtpCard';
 export default function JobDetail() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
-  const job       = getJob(jobId);
+  // Fallback: generate the visit OTP on first view if this active job
+  // somehow has none, rather than showing no OTP area (see store.js).
+  const job       = useMemo(() => ensureVisitOtp(getJob(jobId)), [jobId]);
   const prov      = job ? getProvider(job.providerId) : null;
   const disputes  = getDisputes({ jobId });
   const dispute   = disputes[0];
@@ -92,7 +95,7 @@ export default function JobDetail() {
             <p className="section-title" style={{ margin: '0 0 8px', fontSize: 13 }}>Issue photo (attached by you)</p>
             {job.photo
               ? <img src={job.photo} alt="Customer issue photo" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
-              : <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>✓ {job.photoName} (preview not stored — file was over 1 MB)</p>}
+              : <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>✓ {job.photoName} (preview could not be stored)</p>}
           </div>
         )}
 

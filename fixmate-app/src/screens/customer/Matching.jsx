@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProviders, getUserById, saveJob } from '../../store';
-import MapView, { customerIcon, makeProviderIcon } from '../../components/MapView';
+import { getJob, getProviders, getUserById, getProviderPhone, saveJob } from '../../store';
+import MapView, { customerIcon, makeProviderIcon, makeDistanceIcon } from '../../components/MapView';
 import TopBar from '../../components/TopBar';
+import VisitOtpCard from '../../components/VisitOtpCard';
 import { useToast } from '../../context/ToastContext';
 
 export default function Matching() {
@@ -54,6 +55,14 @@ export default function Matching() {
         navigate(`/no-provider?jobId=${jobId}`);
         return;
       }
+      // Save the match (and its visit OTP) AT ACCEPT TIME, not at
+      // advance time. Previously the job was only saved 1.8s later, so
+      // the Matching screen itself showed no OTP/call at all, and if
+      // the customer left during that window the match was lost and
+      // the job stayed pending forever. Now the OTP exists from the
+      // moment of acceptance and can be shown right here.
+      const saved = saveJob({ ...j, providerId: matched.id, status: 'matched' });
+      setJob(saved);
       setAccepted([matched]);
       setPhase('found');
 
@@ -73,12 +82,13 @@ export default function Matching() {
         Notification.requestPermission().then(p => { if (p === 'granted') fireSystemNotif(); });
       }
 
-      // Advance to assigned screen after showing acceptance for 1.5s.
-      // Kept in a variable so unmounting (e.g. leaving this screen) cancels
-      // the navigation instead of yanking the user away from where they went.
+      // Advance to assigned screen after showing acceptance for 1.8s.
+      // The job is already saved (see above), so this only navigates.
+      // Kept in a variable so unmounting cancels the navigation instead
+      // of yanking the user away from where they went — and a manual
+      // "Continue" button below covers the case where the timer is
+      // cancelled, so the customer is never stuck on this screen.
       const advanceTimer = setTimeout(() => {
-        const updated = { ...j, providerId: matched.id, status: 'matched' };
-        saveJob(updated);
         navigate(`/provider-assigned/${jobId}`);
       }, 1800);
       // Store on the outer timer's closure via a ref-like holder:
@@ -98,6 +108,19 @@ export default function Matching() {
   const customerLat = job.location?.lat || 19.2085;
   const customerLng = job.location?.lng || 72.8735;
 
+  // Route line (straight line, NOT a road route — see MapView note):
+  // once a provider accepts, draw provider → customer with a distance
+  // label at the midpoint, Rapido/Uber style.
+  const acceptedProv = accepted[0] || null;
+  const acceptedPhone = acceptedProv ? getProviderPhone(acceptedProv) : null;
+  const acceptedTelHref = acceptedPhone ? `tel:${acceptedPhone.replace(/[^+\d]/g, '')}` : null;
+  const routeLine = acceptedProv
+    ? [[acceptedProv.lat, acceptedProv.lng], [customerLat, customerLng]]
+    : null;
+  const routeMid = acceptedProv
+    ? [(acceptedProv.lat + customerLat) / 2, (acceptedProv.lng + customerLng) / 2]
+    : null;
+
   const markers = [
     { lat: customerLat, lng: customerLng, icon: customerIcon, popup: 'Your location' },
     ...allProvs.slice(0, notified).map(p => ({
@@ -105,6 +128,11 @@ export default function Matching() {
       icon: makeProviderIcon(accepted.some(a => a.id === p.id)),
       popup: `<strong>${p.name}</strong><br>${p.rating}★ · ${p.distKm.toFixed(1)} km away`,
     })),
+    ...(acceptedProv && routeMid ? [{
+      lat: routeMid[0], lng: routeMid[1],
+      icon: makeDistanceIcon(`${acceptedProv.distKm.toFixed(1)} km`),
+      popup: `<strong>${acceptedProv.name}</strong><br>${acceptedProv.distKm.toFixed(1)} km away (straight-line distance)`,
+    }] : []),
   ];
 
   return (
@@ -119,6 +147,7 @@ export default function Matching() {
           zoom={14}
           height="260px"
           markers={markers}
+          polyline={routeLine}
           onReady={map => setTimeout(() => map.invalidateSize(), 100)}
         />
         {/* Pulse overlay on map */}
@@ -214,6 +243,29 @@ export default function Matching() {
                 </span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* OTP + Call, shown HERE immediately on acceptance — previously
+            the customer saw nothing about OTP/call until the advance to
+            ProviderAssigned, which is exactly what was reported. */}
+        {acceptedProv && (
+          <div style={{ marginTop: 12 }}>
+            <VisitOtpCard job={job} />
+            {acceptedTelHref ? (
+              <a className="btn btn-outline" style={{ marginBottom: 10, textDecoration: 'none' }}
+                href={acceptedTelHref}>
+                <span className="material-symbols-outlined">call</span> Call provider
+              </a>
+            ) : (
+              <button className="btn btn-outline" style={{ marginBottom: 10 }} disabled>
+                <span className="material-symbols-outlined">call</span> Provider phone not available
+              </button>
+            )}
+            <button className="btn btn-primary"
+              onClick={() => navigate(`/provider-assigned/${jobId}`)}>
+              <span className="material-symbols-outlined">arrow_forward</span> Continue
+            </button>
           </div>
         )}
 

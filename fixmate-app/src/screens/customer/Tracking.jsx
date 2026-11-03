@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
-import { getJob, getProvider, getProviderPhone } from '../../store';
-import { customerIcon, makeProviderIcon, makeEtaIcon } from '../../components/MapView';
+import { getJob, getProvider, getProviderPhone, ensureVisitOtp } from '../../store';
+import { customerIcon, makeProviderIcon, makeEtaIcon, makeDistanceIcon } from '../../components/MapView';
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
 import VisitOtpCard from '../../components/VisitOtpCard';
@@ -15,13 +15,16 @@ function lerp([lat1, lng1], [lat2, lng2], t) {
 export default function Tracking() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
-  const job       = getJob(jobId);
+  // Fallback: generate the visit OTP on first view if this active job
+  // somehow has none, rather than showing no OTP area (see store.js).
+  const [job]     = useState(() => ensureVisitOtp(getJob(jobId)));
   const provider  = job ? getProvider(job.providerId) : null;
 
   const mapDivRef    = useRef(null);
   const mapRef       = useRef(null);
   const provMarker   = useRef(null);
   const etaMarker    = useRef(null);
+  const distMarker   = useRef(null);
   const polylineRef  = useRef(null);
   const intervalRef  = useRef(null);
 
@@ -68,11 +71,21 @@ export default function Tracking() {
       .addTo(map)
       .bindPopup('<strong>Your location</strong>');
 
-    // Dashed route line
+    // Dashed route line (straight line between provider and customer —
+    // NOT a road route; see MapView note). Distance label at the
+    // midpoint, Rapido/Uber style, using the provider's seeded distance.
     const poly = L.polyline([provStart, customerLatLng], {
       color: '#1A56DB', weight: 3, dashArray: '8 8', opacity: 0.65,
     }).addTo(map);
     polylineRef.current = poly;
+    if (provider?.distKm) {
+      const mid = [(provStart[0] + customerLatLng[0]) / 2, (provStart[1] + customerLatLng[1]) / 2];
+      const dMarker = L.marker(mid, {
+        icon: makeDistanceIcon(`${provider.distKm.toFixed(1)} km`),
+        interactive: false, keyboard: false,
+      }).addTo(map);
+      distMarker.current = dMarker;
+    }
 
     // Fit map to show both endpoints
     map.fitBounds(poly.getBounds(), { padding: [40, 40] });
