@@ -80,6 +80,16 @@ export default function JobDetail() {
           </div>
         )}
 
+        {/* Photo the customer attached on the Request screen */}
+        {job.photoName && (
+          <div className="prov-card" style={{ marginBottom: 14 }}>
+            <p className="section-title" style={{ margin: '0 0 8px', fontSize: 13 }}>Issue photo (attached by you)</p>
+            {job.photo
+              ? <img src={job.photo} alt="Customer issue photo" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+              : <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>✓ {job.photoName} (preview not stored — file was over 1 MB)</p>}
+          </div>
+        )}
+
         {/* Diagnosis & Findings */}
         {job.diagnosis && (
           <div className="prov-card" style={{ marginBottom: 14 }}>

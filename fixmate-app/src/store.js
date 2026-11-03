@@ -488,6 +488,10 @@ export function createJob(data) {
     issue: data.issue || '',
     mode: data.mode || 'immediate',
     scheduledTime: data.scheduledTime || null,
+    // Customer-attached issue photo: name always; preview data-URL only
+    // when the Request screen stored one (<= 1 MB). No server upload.
+    photoName: data.photoName || null,
+    photo: data.photo || null,
     status: 'pending',
     visitingFee: fees.default,
     parts: [], labour: 0, addOns: [],

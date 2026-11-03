@@ -6,16 +6,27 @@ import TopBar from '../../components/TopBar';
 import BottomTabs from '../../components/BottomTabs';
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user: sessionUser, logout } = useAuth();
   const navigate = useNavigate();
   const toast    = useToast();
 
+  // ONE source for everything: the store record, not the AuthContext
+  // snapshot taken at login/signup. The context object goes stale after
+  // any store write (wallet holds, etc.), so name/phone/address/avatar
+  // previously could disagree with the wallet shown next to them.
+  // (Signup collects a phone number but no address field — see
+  // Signup.jsx/store.js signup() — so "Address not set" is accurate
+  // for self-registered users, not a mapping bug; seeded demo users
+  // do carry an address, and that is what shows for them.)
+  const user = sessionUser ? (getUserById(sessionUser.id) || sessionUser) : null;
   const jobs      = user ? getJobs({ customerId: user.id }) : [];
   const completed = jobs.filter(j => j.status === 'completed').length;
-  // Always read fresh user for wallet state
-  const freshUser = user ? (getUserById(user.id) || user) : user;
-  const wallet    = freshUser?.wallet || { balance: 500, holds: [] };
+  const wallet    = user?.wallet || { balance: 500, holds: [] };
   const holds     = wallet.holds || [];
+  // Avatar fallback: stored initials, else initials from the name.
+  const avatarText = user?.avatar
+    || user?.name?.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    || '?';
 
   function handleLogout() {
     logout();
@@ -30,7 +41,7 @@ export default function Profile() {
       <div className="body screen-enter">
         <div className="prov-card">
           <div className="prov-top">
-            <div className="avatar avatar-xl">{user?.avatar}</div>
+            <div className="avatar avatar-xl">{avatarText}</div>
             <div>
               <h3>{user?.name}</h3>
               <span className="meta">{user?.phone || 'No phone set'}</span>
@@ -57,7 +68,7 @@ export default function Profile() {
         <div className="prov-card" style={{ marginBottom:20 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: holds.length ? 12 : 0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <span className="material-symbols-outlined" style={{ color:'var(--blue)', fontSize:22 }}>account_balance_wallet</span>
+              <span className="material-symbols-outlined" style={{ color:'var(--blue)', fontSize:20 }}>account_balance_wallet</span>
               <div>
                 <strong style={{ fontSize:15 }}>{fmt(wallet.balance)}</strong>
                 <div style={{ fontSize:11, color:'var(--text-muted)' }}>Available balance</div>
