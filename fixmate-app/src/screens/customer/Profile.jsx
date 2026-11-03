@@ -87,7 +87,10 @@ export default function Profile() {
         </button>
 
         <p style={{ textAlign:'center', fontSize:11, color:'var(--text-muted)', marginTop:16 }}>
-          FixMate v1.0.0 · <a href="/checklist" style={{ color:'var(--blue)' }}>Implementation checklist</a>
+          FixMate v1.0.0
+          {/* Note: the old "Implementation checklist" link pointed at /checklist,
+              which has no route in this app, so it was removed rather than
+              sending users to a dead link. */}
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import RequireAuth from './components/RequireAuth';
 import AppHeader from './components/AppHeader';
@@ -49,9 +49,8 @@ function isMobileDevice() {
 
 // PWA install prompt — shown once per device
 function InstallBanner() {
-  const [prompt, setPrompt] = window.__deferredInstallPrompt
-    ? [window.__deferredInstallPrompt, () => {}]
-    : [null, () => {}];
+  // The deferred prompt lives on window and is read live in install();
+  // no state copy is needed (the previous copy was never read).
   const [show, setShow] = React.useState(
     () => !localStorage.getItem('pwa_install_dismissed') && isMobileDevice()
   );
@@ -136,7 +135,6 @@ function RouteLoader() {
 
 function AppLayout() {
   const location = useLocation();
-  const { user } = useAuth();
 
   // 1. Explicit Marketing Website (accessible on all devices)
   if (location.pathname === '/website') {

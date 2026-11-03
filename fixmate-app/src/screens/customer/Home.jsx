@@ -32,7 +32,13 @@ export default function Home() {
   }
 
   const allJobs = user ? getJobs({ customerId: user.id }) : [];
-  const activeJob = allJobs.find(j => !['completed', 'cancelled', 'disputed'].includes(j.status));
+  // A job is "active" only if it is still open. The old check excluded only
+  // the exact status 'cancelled', so cancelled_by_customer /
+  // cancelled_by_provider jobs and quote_rejected jobs kept showing as active.
+  const activeJob = allJobs.find(j =>
+    !['completed', 'quote_rejected', 'disputed'].includes(j.status) &&
+    !String(j.status || '').includes('cancel')
+  );
   const recentJobs = allJobs.slice(0, 4);
 
   const getStatusBadge = (status) => {

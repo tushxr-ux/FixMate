@@ -17,8 +17,6 @@ export default function Tracking() {
   const job       = getJob(jobId);
   const provider  = job ? getProvider(job.providerId) : null;
 
-  const CUSTOMER_LATLNG = job?.location?.lat ? [job.location.lat, job.location.lng] : DEFAULT_CUSTOMER_LATLNG;
-
   const mapDivRef    = useRef(null);
   const mapRef       = useRef(null);
   const provMarker   = useRef(null);
@@ -119,7 +117,7 @@ export default function Tracking() {
       map.remove();
       mapRef.current = null;
     };
-  }, [customerLatLng]);
+  }, [customerLatLng, provider?.lat, provider?.lng, provider?.name]);
 
 
   if (!job) { navigate('/home'); return null; }

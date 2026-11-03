@@ -10,6 +10,7 @@ export default function Matching() {
   const navigate  = useNavigate();
   const toast     = useToast();
   const mapRef    = useRef(null);
+  const advanceTimerRef = useRef(null);
 
   const [phase,     setPhase]     = useState('broadcasting'); // broadcasting | found
   const [notified,  setNotified]  = useState(0);   // how many providers received request
@@ -60,19 +61,24 @@ export default function Matching() {
         Notification.requestPermission().then(p => { if (p === 'granted') fireSystemNotif(); });
       }
 
-      // Advance to assigned screen after showing acceptance for 1.5s
-      setTimeout(() => {
+      // Advance to assigned screen after showing acceptance for 1.5s.
+      // Kept in a variable so unmounting (e.g. leaving this screen) cancels
+      // the navigation instead of yanking the user away from where they went.
+      const advanceTimer = setTimeout(() => {
         const updated = { ...j, providerId: matched.id, status: 'matched' };
         saveJob(updated);
         navigate(`/provider-assigned/${jobId}`);
       }, 1800);
+      // Store on the outer timer's closure via a ref-like holder:
+      advanceTimerRef.current = advanceTimer;
     }, 2800);
 
     return () => {
       clearInterval(notifyInterval);
       clearTimeout(acceptTimer);
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
-  }, [jobId, navigate]);
+  }, [jobId, navigate, toast]);
 
   if (!job) return null;
 

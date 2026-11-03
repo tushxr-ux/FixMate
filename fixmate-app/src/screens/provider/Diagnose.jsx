@@ -13,7 +13,7 @@ async function askGemini(reportedIssue, item, observation) {
     `You are an expert automotive/appliance mechanic assistant.`,
     `Vehicle/Item: ${item}`,
     `Customer reported issue: ${reportedIssue}`,
-    observation ? `Mechanic\'s initial observation: ${observation}` : '',
+    observation ? `Mechanic's initial observation: ${observation}` : '',
     ``,
     `In 2-3 concise sentences, provide a professional diagnosis: root cause, affected component, and the most likely repair action needed.`,
     `Keep it factual, jargon-appropriate for a mechanic, and avoid disclaimers.`,

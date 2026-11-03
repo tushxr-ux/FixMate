@@ -6,13 +6,18 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+// Bundle Leaflet's marker images with the app instead of loading them from
+// a CDN at runtime (the old unpkg URLs broke offline and on flaky networks).
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Fix Leaflet default icon paths (broken in Vite by default)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl: markerIcon2x,
+  iconUrl:       markerIcon,
+  shadowUrl:     markerShadow,
 });
 
 /* ── Custom DivIcons ─────────────────────────────────────── */
