@@ -52,6 +52,22 @@ export function makeProviderIcon(isHighlighted = false) {
   });
 }
 
+// Distance label shown at the midpoint of a provider→customer route
+// line (Rapido/Uber style). The label shows the provider's seeded
+// straight-line distance (distKm), NOT a road distance.
+export function makeDistanceIcon(label) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      background:#fff;border:1.5px solid var(--blue,#1A56DB);border-radius:20px;
+      padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue,#1A56DB);
+      white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15);
+    ">📍 ${label}</div>`,
+    iconSize:   [80, 28],
+    iconAnchor: [40, 14],
+  });
+}
+
 export function makeEtaIcon(etaMin) {
   return L.divIcon({
     className: '',
@@ -197,7 +213,10 @@ const MapView = forwardRef(function MapView(
     );
   }, [circles]);
 
-  // Polyline
+  // Polyline — a STRAIGHT line between the given points, not a road
+  // route. No routing API is used (no key, no extra dependency); the
+  // line only visualises provider → customer direction and distance.
+  // Callers must label any distance shown with it as straight-line.
   const polyRef = useRef(null);
   useEffect(() => {
     const map = mapRef.current;
