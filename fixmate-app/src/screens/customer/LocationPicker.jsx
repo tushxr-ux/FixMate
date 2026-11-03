@@ -72,10 +72,18 @@ export default function LocationPicker() {
   }, []);
 
   /* ── Confirm ───────────────────────────────────────────── */
+  // Contract with the caller (Request screen): return the draft nested
+  // under forwardState plus the picked location, i.e.
+  //   { forwardState: { desc, mode, schedAt, photo, photoDataUrl },
+  //     location: { lat, lng, address } }
+  // (An older build spread the draft fields at top level, which the
+  // caller did not read — that mismatch wiped the draft on return.)
+  // Callers without nextRoute (Home/AppHeader location pills) have no
+  // draft to return, so back-navigation is correct for them.
   function confirmLocation() {
     const loc = { lat: pin.lat, lng: pin.lng, address };
     if (nextRoute) {
-      navigate(nextRoute, { state: { ...forwardState, location: loc } });
+      navigate(nextRoute, { state: { forwardState, location: loc } });
     } else {
       navigate(-1);
     }
@@ -184,7 +192,7 @@ export default function LocationPicker() {
           title="Use my location"
           style={{ zIndex: 400 }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>my_location</span>
+          <span className="material-symbols-outlined">my_location</span>
         </button>
       </div>
 

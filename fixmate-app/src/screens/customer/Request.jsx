@@ -1,7 +1,34 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { createJob, createHold, currentUser } from '../../store';
 import TopBar from '../../components/TopBar';
+
+// ── Request-draft contract ─────────────────────────────────────
+// The draft is the single source of truth for an in-progress request.
+// It lives in sessionStorage (keyed per category/item) so it survives:
+//  (a) Confirm-location return, (b) TopBar back-button return from
+//      LocationPicker (which remounts this screen with no router state),
+//  (c) a page refresh. It is cleared ONLY on successful submit.
+// Router state is still honoured as a second source, in both shapes:
+//  the current contract { forwardState, location } AND the old spread
+//  shape { desc, mode, schedAt, photo, location } from LocationPicker.
+// A photo data-URL is stored only for files <= 1 MB (base64 inflates
+// size ~33%, and sessionStorage is typically ~5 MB); larger photos keep
+// their filename only, so the draft can never blow up storage.
+const MAX_PHOTO_DATA_URL_BYTES = 1024 * 1024;
+
+function draftKey(categoryId, itemName) {
+  return `fixmate:request-draft:${categoryId || ''}:${itemName || ''}`;
+}
+
+function readDraft(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function Request() {
   const { categoryId, itemName } = useParams();
@@ -9,40 +36,80 @@ export default function Request() {
   const routerLoc   = useLocation();
   const fileRef      = useRef();
 
-  const [desc,    setDesc]    = useState('');
-  const [mode,    setMode]    = useState('immediate');
-  const [schedAt, setSchedAt] = useState('');
-  const [photo,   setPhoto]   = useState(null);
+  const key = draftKey(categoryId, itemName);
+  // Merge, weakest first: stored draft, then router state (freshest wins).
+  // Router state may carry forwardState (current contract) or the fields
+  // spread at top level (old LocationPicker shape) — accept both.
+  const routerState = routerLoc.state || {};
+  const forwarded = routerState.forwardState || routerState;
+  const stored = readDraft(key) || {};
+  const initial = {
+    desc: forwarded.desc ?? stored.desc ?? '',
+    mode: forwarded.mode ?? stored.mode ?? 'immediate',
+    schedAt: forwarded.schedAt ?? stored.schedAt ?? '',
+    photo: forwarded.photo ?? stored.photo ?? null,
+    photoDataUrl: forwarded.photoDataUrl ?? stored.photoDataUrl ?? null,
+    location: routerState.location ?? stored.location ?? null,
+  };
+
+  const [desc,    setDesc]    = useState(initial.desc);
+  const [mode,    setMode]    = useState(initial.mode);
+  const [schedAt, setSchedAt] = useState(initial.schedAt);
+  const [photo,   setPhoto]   = useState(initial.photo);
+  const [photoDataUrl, setPhotoDataUrl] = useState(initial.photoDataUrl);
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Location comes back from LocationPicker via router state
-  const pickedLocation = routerLoc.state?.location || null;
+  // Location comes back from LocationPicker via router state, or from
+  // the stored draft (covers back-button return and refresh).
+  const pickedLocation = routerState.location || stored.location || null;
+
+  // Persist the draft on every change. This is what makes the
+  // back-button return work: LocationPicker's TopBar back does
+  // navigate(-1) with no state, remounting this screen, which then
+  // restores from here instead of from router state.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(key, JSON.stringify({
+        desc, mode, schedAt, photo, photoDataUrl, location: pickedLocation,
+      }));
+    } catch {
+      // Storage full (e.g. a huge photo slipped through): keep the
+      // text fields and drop the data-URL rather than losing the draft.
+      try {
+        sessionStorage.setItem(key, JSON.stringify({
+          desc, mode, schedAt, photo, photoDataUrl: null, location: pickedLocation,
+        }));
+      } catch { /* draft persistence is best-effort */ }
+    }
+  }, [key, desc, mode, schedAt, photo, photoDataUrl, pickedLocation]);
 
   const decodedItem = decodeURIComponent(itemName || '');
 
   function handlePhoto(e) {
     const file = e.target.files[0];
-    if (file) setPhoto(file.name);
+    if (!file) return;
+    setPhoto(file.name);
+    if (file.size <= MAX_PHOTO_DATA_URL_BYTES) {
+      const reader = new FileReader();
+      reader.onload = () => setPhotoDataUrl(reader.result);
+      reader.onerror = () => setPhotoDataUrl(null);
+      reader.readAsDataURL(file);
+    } else {
+      // Large photo: keep the name only, so the draft stays small.
+      setPhotoDataUrl(null);
+    }
   }
 
   function openLocationPicker() {
     navigate('/location-picker', {
       state: {
         nextRoute: `/request/${categoryId}/${itemName}`,
-        forwardState: { desc, mode, schedAt, photo },
+        // Current contract: draft fields nested under forwardState.
+        forwardState: { desc, mode, schedAt, photo, photoDataUrl },
       },
     });
   }
-
-  // Restore state forwarded back from LocationPicker
-  const forwarded = routerLoc.state?.forwardState;
-  useState(() => {
-    if (forwarded?.desc)   setDesc(forwarded.desc);
-    if (forwarded?.mode)   setMode(forwarded.mode);
-    if (forwarded?.schedAt)setSchedAt(forwarded.schedAt);
-    if (forwarded?.photo)  setPhoto(forwarded.photo);
-  });
 
   async function handleSubmit() {
     if (!desc.trim()) { setError('Please describe the issue.'); return; }
@@ -57,6 +124,11 @@ export default function Request() {
       mode,
       scheduledTime: mode === 'scheduled' ? schedAt : null,
       location: pickedLocation,
+      // Photo is stored on the job record (name always, preview only if
+      // small enough). It is never uploaded to a server — this app has
+      // no backend; the preview lives in localStorage with the job.
+      photoName: photo,
+      photo: photoDataUrl,
     });
 
     // §2.1: place ₹100 hold on wallet for scheduled bookings (no-show protection)
@@ -67,6 +139,8 @@ export default function Request() {
 
     setLoading(false);
     if (!job) { setError('Please log in to book a job.'); return; }
+    // Draft is cleared ONLY here, on successful submit.
+    try { sessionStorage.removeItem(key); } catch { /* ignore */ }
     navigate(`/matching/${job.id}`);
   }
 
@@ -95,6 +169,9 @@ export default function Request() {
             <span className="material-symbols-outlined">photo_camera</span>
             <span>{photo ? `✓ ${photo}` : 'Attach a photo'}</span>
           </div>
+          {photoDataUrl && (
+            <img src={photoDataUrl} alt="Attached issue preview" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, marginTop: 8, border: '1px solid var(--border)' }} />
+          )}
           <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display: 'none' }} />
         </div>
 
