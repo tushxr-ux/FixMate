@@ -206,6 +206,26 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+}
+
+/* Header halves must be allowed to shrink: without min-width: 0 the
+   location pill's unbreakable text forced the header to ~692px wide on a
+   390px phone, cutting the hamburger off the right edge (as seen in the
+   screenshot). */
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .desktop-app-nav {
@@ -250,6 +270,20 @@ button {
   color: var(--text);
   cursor: pointer;
   transition: all 0.15s ease;
+  min-width: 0;
+}
+
+.location-pill .material-symbols-outlined {
+  flex-shrink: 0;
+}
+
+/* Location text truncates with an ellipsis instead of pushing the
+   header (and the hamburger) off-screen on a phone. */
+.location-pill-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .location-pill:hover {
@@ -270,6 +304,29 @@ button {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Phones: the SOS button becomes icon-only so the header fits; the
+   full "24/7 Roadside SOS" entry stays in the mobile drawer menu. */
+@media (max-width: 480px) {
+  .sos-nav-btn > span:last-child {
+    display: none;
+  }
+  .sos-nav-btn {
+    padding: 8px 10px;
+  }
+  .app-header-inner {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .app-header-left {
+    gap: 8px;
+  }
+  .app-header-actions {
+    gap: 8px;
+  }
 }
 
 .sos-nav-btn:hover {
@@ -405,6 +462,8 @@ button {
   color: var(--text);
   margin: 0;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
   letter-spacing: -0.01em;
 }
 
@@ -552,14 +611,17 @@ button {
 /* ── Cards & Category Grids ────────────────────────────────── */
 .cat-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Same minmax(0, 1fr) guard as .item-grid: never let a card's content
+     force a track wider than the viewport. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
   .cat-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 }
@@ -622,11 +684,27 @@ button {
 /* ── Item Grid (Subcategories) ─────────────────────────────── */
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, 1fr) is load-bearing here, NOT plain 1fr: a grid track's
+     default minimum is its content's min-content size, and the item
+     labels below used to be unbreakable flex text, so on a phone the
+     tracks grew to ~250–290px each and the grid overflowed the viewport
+     (measured: 3 columns totalling ~812px inside a 390px viewport).
+     minmax(0, 1fr) lets tracks shrink to the container and forces labels
+     to wrap inside their card instead. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 20px;
   /* Equal-sized buttons: grid rows stretch, and each card fills its cell. */
   align-items: stretch;
+  min-width: 0;
+}
+
+/* Phones: 2 columns — 3 columns at ~110px each leaves labels like
+   "Geyser / Water Heater" unreadable and wrapping to 4+ lines. */
+@media (max-width: 768px) {
+  .item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .item-card {
@@ -648,6 +726,7 @@ button {
   color: inherit;
   width: 100%;
   height: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -670,10 +749,15 @@ button {
 
 .item-card .item-icon {
   height: 32px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* Worst-case guard: if the icon font ever fails to load, the raw
+     ligature text (e.g. "local_laundry_service") is ~270px wide and
+     would otherwise spill out of the card. Clip it to the card. */
+  overflow: hidden;
 }
 
 .item-card .material-symbols-outlined {
@@ -682,9 +766,13 @@ button {
 }
 
 .item-card span.label {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  /* Block (not flex): a flex container turns its text into an anonymous
+     flex item whose min-content size is the whole unbroken phrase, which
+     is what forced grid tracks wider than the phone screen. As a block,
+     the label wraps at spaces and breaks long words inside the card. */
+  display: block;
+  text-align: center;
+  overflow-wrap: break-word;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
@@ -1823,7 +1911,7 @@ input:checked ~ .toggle-track::before {
 /* ── Responsive Mobile Adjustments ─────────────────────────── */
 @media (max-width: 480px) {
   .cat-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
   .stat-row {

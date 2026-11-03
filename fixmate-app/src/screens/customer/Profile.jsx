@@ -86,7 +86,11 @@ export default function Profile() {
           ].map(({ label, value }) => (
             <div key={label} className="line-item" style={{ padding: '8px 0' }}>
               <div className="li-label" style={{ fontSize: 13 }}><strong>{label}</strong></div>
-              <div className="li-value" style={{ fontSize: 13, textAlign: 'right', maxWidth: '65%' }}>
+              {/* whiteSpace normal + minWidth 0 override the global
+                  .li-value nowrap: a long address/email otherwise overflows
+                  its 65% max-width and pushes the whole page ~250px wide
+                  on a phone (measured on Profile at 390px). */}
+              <div className="li-value" style={{ fontSize: 13, textAlign: 'right', maxWidth: '65%', minWidth: 0, whiteSpace: 'normal', overflowWrap: 'break-word' }}>
                 {value || 'Not set'}
               </div>
             </div>

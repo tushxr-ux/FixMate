@@ -21,7 +21,7 @@ export default function AppHeader() {
     <header className="app-header">
       <div className="app-header-inner">
         {/* Brand Logo & Location */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="app-header-left">
           <Link to={user ? (isProvider ? '/provider' : isAdmin ? '/admin' : '/home') : '/website'} style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src="/fixmate-logo.webp"
@@ -37,7 +37,7 @@ export default function AppHeader() {
               title="Click to change service location"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--blue)' }}>location_on</span>
-              <span style={{ fontWeight: 600 }}>Thakur Village, Kandivali</span>
+              <span className="location-pill-text" style={{ fontWeight: 600 }}>Thakur Village, Kandivali</span>
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#94A3B8' }}>expand_more</span>
             </div>
           )}
@@ -91,7 +91,7 @@ export default function AppHeader() {
         </nav>
 
         {/* User Profile & Right Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="app-header-actions">
           {isCustomer && (
             <button
               onClick={() => navigate('/emergency')}
