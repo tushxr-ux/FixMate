@@ -462,12 +462,41 @@ export function getJob(id) {
   return recall('jobs', []).find(j => j.id === id) || null;
 }
 
+/* ── Visit OTP (in-app verification, NOT SMS) ──────────────── */
+// A 4-digit code the customer shares with the provider ONLY on arrival,
+// so the provider can prove they are at the right job before starting
+// work (Rapido/Uber style). It lives on the job in localStorage only:
+// no SMS, no telephony, no server. It is generated ONCE, at the moment
+// a provider is assigned (status 'matched' + providerId), and never
+// regenerated on re-render or on later saves of the same assignment —
+// so ProviderAssigned and Tracking always show the same code. If the
+// job is reassigned to a different provider, a fresh code is issued and
+// otpVerified resets. If the provider is removed (decline), the code is
+// cleared with the assignment.
+export function generateVisitOtp() {
+  return String(1000 + Math.floor(Math.random() * 9000));
+}
+
 export function saveJob(job) {
   const jobs = recall('jobs', []);
   const idx = jobs.findIndex(j => j.id === job.id);
-  if (idx >= 0) jobs[idx] = job; else jobs.unshift(job);
+  const previous = idx >= 0 ? jobs[idx] : null;
+  const next = { ...job };
+  if (next.providerId && next.status === 'matched') {
+    const reassigned = previous && previous.providerId && previous.providerId !== next.providerId;
+    if (!next.otp || reassigned) {
+      next.otp = generateVisitOtp();
+      next.otpVerified = false;
+    } else if (next.otpVerified === undefined) {
+      next.otpVerified = previous ? !!previous.otpVerified : false;
+    }
+  } else if (!next.providerId) {
+    delete next.otp;
+    delete next.otpVerified;
+  }
+  if (idx >= 0) jobs[idx] = next; else jobs.unshift(next);
   persist('jobs', jobs);
-  return job;
+  return next;
 }
 
 export function createJob(data) {
@@ -525,6 +554,22 @@ export function getProviders(filter = {}) {
 
 export function getProvider(id) {
   return recall('providers', []).find(p => p.id === id) || null;
+}
+
+// Provider phone for the Call button: seeded provider records carry no
+// phone field themselves — the number lives on their linked user record
+// (provider.userId). A provider created via signup may have a phone on
+// either record, so check both; return null (not a fake number) when
+// neither has one, so callers can disable the button instead of
+// dialling a broken link.
+export function getProviderPhone(provider) {
+  if (!provider) return null;
+  if (provider.phone) return provider.phone;
+  if (provider.userId) {
+    const linked = recall('users', []).find(u => u.id === provider.userId);
+    if (linked?.phone) return linked.phone;
+  }
+  return null;
 }
 
 export function getProviderByUser(userId) {

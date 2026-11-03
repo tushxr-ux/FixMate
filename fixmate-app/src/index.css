@@ -625,6 +625,8 @@ button {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 20px;
+  /* Equal-sized buttons: grid rows stretch, and each card fills its cell. */
+  align-items: stretch;
 }
 
 .item-card {
@@ -635,6 +637,21 @@ button {
   text-align: center;
   cursor: pointer;
   transition: all 0.15s ease;
+  /* Rendered as a <button>: neutralise native button chrome so the card
+     keeps its designed look, and force equal sizing. Previously the card
+     height followed its label: "TV" (1 line) was much shorter than
+     "Geyser / Water Heater" (2 lines), so buttons in the same grid
+     looked uneven. Now every card is a flex column with a fixed-height
+     icon area and a label area reserved for 2 lines, so short and long
+     labels produce identical card heights at every width. */
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .item-card:hover {
@@ -646,17 +663,52 @@ button {
   transform: scale(0.96);
 }
 
+.item-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.item-card .item-icon {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .item-card .material-symbols-outlined {
   color: var(--blue);
   font-size: 28px;
 }
 
 .item-card span.label {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
   margin-top: 6px;
+  line-height: 1.4;
+  /* Reserve exactly 2 lines so 1-line and 2-line labels align. Labels
+     longer than 2 lines are rare in this catalogue; they wrap within the
+     reserved area only if they fit, otherwise the card grows — the grid
+     row still stretches every card in that row to match. */
+  min-height: calc(2 * 12px * 1.4);
+}
+
+button.search-bar {
+  font-family: inherit;
+}
+
+/* Category cards (Home): same stretch treatment so one tall card does not
+   leave its row-mates short. */
+.cat-grid {
+  align-items: stretch;
+}
+
+.cat-grid .card {
+  height: 100%;
 }
 
 /* ── History Row ───────────────────────────────────────────── */
