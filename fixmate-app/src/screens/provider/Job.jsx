@@ -18,6 +18,14 @@ export default function ProviderJob() {
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState('');
 
+  // Guard FIRST: on a missing job, job.status below used to throw
+  // ("Cannot read properties of null") and white-screen the app.
+  // This return sits after all useState hooks, so hook order is safe.
+  if (!job) {
+    navigate('/provider');
+    return null;
+  }
+
   // ── Visit OTP verification (arrival gate) ─────────────────────
   // The customer shares a 4-digit code on arrival (see store.js
   // saveJob: generated once at assignment, stored on the job). A wrong
@@ -37,11 +45,6 @@ export default function ProviderJob() {
   }
   const otpRequired = job.status === 'accepted' && !!job.otp;
   const otpPassed = !otpRequired || !!job.otpVerified;
-
-  if (!job) {
-    navigate('/provider');
-    return null;
-  }
 
   const customer = job.customerId ? getUserById(job.customerId) : null;
   const prov = job.providerId ? getProvider(job.providerId) : null;

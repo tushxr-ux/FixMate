@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { getJobs, getProviderByUser, saveProvider, saveJob, fmt, addNotif } from '../../store';
+import { getJobs, getProviderByUser, saveProvider, saveJob, fmt, addNotif, generateVisitOtp, providerServesCategory } from '../../store';
 import EmptyState from '../../components/EmptyState';
 
 export default function ProviderDashboard() {
@@ -13,12 +13,25 @@ export default function ProviderDashboard() {
   const [avail, setAvail] = useState(prov?.available ?? false);
   const [radius, setRadius] = useState(prov?.serviceRadius || 5);
   const [showSettings, setShowSettings] = useState(false);
+  // Doc-upload previews (Nov 2026 QA: setIdDoc/setBizDoc were called
+  // but never declared, so uploading a document threw at runtime).
+  const [, setIdDoc] = useState(prov?.idDocUrl || '');
+  const [, setBizDoc] = useState(prov?.bizDocUrl || '');
 
   const myJobs = prov ? getJobs({ providerId: prov.id }) : [];
   const incoming = myJobs.filter(j => j.status === 'matched');
   const active   = myJobs.filter(j => ['accepted', 'diagnosing', 'quote_sent', 'in_progress'].includes(j.status));
   const done     = myJobs.filter(j => j.status === 'completed');
   const earnings = done.reduce((s, j) => s + (j.total || 0), 0);
+
+  // Open requests: jobs nobody owns yet (e.g. after a provider
+  // declines, the job returns to 'pending' with no provider). Before
+  // this section existed, such jobs were invisible to every provider
+  // and could never be accepted again. Only jobs in this provider's
+  // own categories are shown, and only while the provider is available.
+  const openRequests = prov && avail
+    ? getJobs({ status: 'pending' }).filter(j => !j.providerId && providerServesCategory(prov, j.category))
+    : [];
 
   function toggleAvail(checked) {
     if (!prov) return;
@@ -72,6 +85,28 @@ export default function ProviderDashboard() {
     const updated = { ...job, providerId: null, status: 'pending' };
     saveJob(updated);
     toast.info('Job declined.');
+  }
+
+  // Accept an open (unassigned) request in one tap. End state matches
+  // the normal matched → accepted flow, including the visit OTP: the
+  // OTP is generated here explicitly (saveJob only auto-generates it
+  // at 'matched'), so the customer sees the same code on their
+  // ProviderAssigned/Tracking/JobDetail screens and the provider's
+  // arrival gate works exactly as for auto-matched jobs.
+  function handleAcceptOpenJob(job) {
+    const updated = {
+      ...job, providerId: prov.id, status: 'accepted',
+      otp: generateVisitOtp(), otpVerified: false,
+    };
+    saveJob(updated);
+    if (job.customerId) {
+      addNotif(job.customerId, {
+        title: 'Specialist En Route',
+        text: `${prov?.name || 'Your provider'} accepted your job and is on their way!`,
+      });
+    }
+    toast.success('Job accepted! Customer notified.');
+    navigate(`/provider/job/${job.id}`);
   }
 
   function handleLogout() {
@@ -231,6 +266,41 @@ export default function ProviderDashboard() {
                     Accept Job
                   </button>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Open requests nobody owns yet (incl. declined jobs) */}
+        {openRequests.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--blue)', fontSize: 20 }}>radar</span>
+              <p className="section-title" style={{ margin: 0, color: 'var(--blue)' }}>Open Requests Near You ({openRequests.length})</p>
+            </div>
+            <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
+              Jobs waiting for a provider — including jobs another provider declined.
+            </p>
+            {openRequests.map(j => (
+              <div key={j.id} className="prov-card" style={{ border: '1.5px dashed var(--blue)', marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div>
+                    <strong style={{ fontSize: 15 }}>{j.item} — {j.category}</strong>
+                    <span style={{ display: 'block', fontSize: 12, color: 'var(--gray)', marginTop: 2 }}>{j.issue}</span>
+                  </div>
+                  <span className="badge badge-info" style={{ fontWeight: 700 }}>{fmt(j.visitingFee || 50)}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--blue)' }}>location_on</span>
+                  <span>{j.location?.address || 'Thakur Village, Kandivali East, Mumbai'}</span>
+                </div>
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ width: '100%' }}
+                  onClick={() => handleAcceptOpenJob(j)}
+                >
+                  Accept This Job
+                </button>
               </div>
             ))}
           </div>
