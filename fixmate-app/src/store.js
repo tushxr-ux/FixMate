@@ -642,9 +642,11 @@ export function createDispute({ jobId, category, description, evidence = [] }) {
 
 /* ── Helpers ──────────────────────────────── */
 export function calcTotal(job) {
-  const parts  = (job.parts  || []).reduce((s, p) => s + p.cost, 0);
-  const addOns = (job.addOns || []).reduce((s, a) => s + a.cost, 0);
-  return (job.visitingFee || 0) + parts + (job.labour || 0) + addOns;
+  // Number() guards: a string/undefined cost used to poison the whole total
+  // into NaN (the quote screens already guard this way; keep it consistent).
+  const parts  = (job.parts  || []).reduce((s, p) => s + (Number(p.cost) || 0), 0);
+  const addOns = (job.addOns || []).reduce((s, a) => s + (Number(a.cost) || 0), 0);
+  return (Number(job.visitingFee) || 0) + parts + (Number(job.labour) || 0) + addOns;
 }
 
 export function fmt(n) {
