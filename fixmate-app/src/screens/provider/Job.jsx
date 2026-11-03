@@ -15,6 +15,28 @@ export default function ProviderJob() {
   const [cancelReason, setCancelReason] = useState('Customer unavailable / no-show');
   const [afterPhoto, setAfterPhoto] = useState('');
   const [completing, setCompleting] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
+
+  // ── Visit OTP verification (arrival gate) ─────────────────────
+  // The customer shares a 4-digit code on arrival (see store.js
+  // saveJob: generated once at assignment, stored on the job). A wrong
+  // code blocks starting work; it never marks the job verified. Jobs
+  // created before OTP existed carry no code — for those, verification
+  // is skipped with an honest note rather than bricking the job.
+  function handleVerifyOtp() {
+    if (!job.otp) return;
+    if (otpInput.trim() === job.otp) {
+      const saved = saveJob({ ...job, otpVerified: true });
+      setJob(saved);
+      setOtpError('');
+      toast.success('OTP verified — you may start the work.');
+    } else {
+      setOtpError('Wrong OTP — please ask the customer to read the code again. Do not start work yet.');
+    }
+  }
+  const otpRequired = job.status === 'accepted' && !!job.otp;
+  const otpPassed = !otpRequired || !!job.otpVerified;
 
   if (!job) {
     navigate('/provider');
@@ -304,14 +326,55 @@ export default function ProviderJob() {
           )}
 
           {job.status === 'accepted' && (
-            <button 
-              className="btn btn-primary"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-              onClick={() => navigate(`/provider/diagnose/${job.id}`)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>medical_information</span>
-              Arrived &amp; Start Diagnosis
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Provider arrived — enter the customer's OTP to start work */}
+              <div className="prov-card" style={{ marginBottom: 0 }}>
+                <p className="section-title" style={{ margin: '0 0 8px' }}>
+                  Provider arrived — enter customer&apos;s OTP to start work
+                </p>
+                {job.otpVerified ? (
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green-text)' }}>
+                    ✓ OTP verified — work may start.
+                  </div>
+                ) : job.otp ? (
+                  <>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, margin: '0 0 10px' }}>
+                      Ask the customer for the 4-digit visit OTP shown in their
+                      app. Work must not start until it matches.
+                    </p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        type="text" inputMode="numeric" autoComplete="one-time-code"
+                        placeholder="4-digit OTP" maxLength={4} value={otpInput}
+                        onChange={e => { setOtpInput(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
+                        aria-label="Customer visit OTP"
+                        style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 16, letterSpacing: 4, textAlign: 'center' }}
+                      />
+                      <button type="button" className="btn btn-primary" style={{ width: 'auto' }}
+                        onClick={handleVerifyOtp} disabled={otpInput.length !== 4}>
+                        Verify
+                      </button>
+                    </div>
+                    {otpError && <p style={{ fontSize: 12, color: 'var(--red)', margin: '8px 0 0' }}>{otpError}</p>}
+                  </>
+                ) : (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                    No visit OTP was set for this job (booking made before OTP
+                    verification was added) — verification is skipped for this job.
+                  </p>
+                )}
+              </div>
+
+              <button
+                className="btn btn-primary"
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                disabled={!otpPassed}
+                onClick={() => navigate(`/provider/diagnose/${job.id}`)}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>medical_information</span>
+                {otpPassed ? 'Arrived & Start Diagnosis' : 'Enter the correct OTP to start'}
+              </button>
+            </div>
           )}
 
           {job.status === 'quote_sent' && (

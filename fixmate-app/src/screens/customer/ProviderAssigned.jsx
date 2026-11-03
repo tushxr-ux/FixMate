@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getProvider, saveConfirmationCall } from '../../store';
+import { getJob, getProvider, getProviderPhone, saveConfirmationCall } from '../../store';
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
+import VisitOtpCard from '../../components/VisitOtpCard';
 
 export default function ProviderAssigned() {
   const { jobId } = useParams();
   const navigate  = useNavigate();
   const [job, setJob] = useState(() => getJob(jobId));
   const provider  = job ? getProvider(job.providerId) : null;
+  // Call = plain tel: link to the provider's stored number (no telephony
+  // service). Seeded provider records have no phone field; the number
+  // comes from their linked user record via getProviderPhone.
+  const providerPhone = getProviderPhone(provider);
+  const telHref = providerPhone ? `tel:${providerPhone.replace(/[^+\d]/g, '')}` : null;
 
   if (!job) { navigate('/home'); return null; }
 
@@ -31,6 +37,8 @@ export default function ProviderAssigned() {
 
         <ProviderCard provider={provider} />
 
+        <VisitOtpCard job={job} />
+
         <div className="prov-card" style={{ marginBottom: 16 }}>
           <p className="section-title" style={{ marginBottom: 8 }}>Job summary</p>
           <div style={{ display:'flex', gap: 12 }}>
@@ -49,6 +57,19 @@ export default function ProviderAssigned() {
             </div>
           )}
         </div>
+
+        {/* Direct call to the provider (tel: link) — in addition to, not
+            a replacement for, the "Confirm visit by call" log below. */}
+        {telHref ? (
+          <a className="btn btn-outline" style={{ marginBottom: 10, textDecoration: 'none' }}
+            href={telHref}>
+            <span className="material-symbols-outlined">call</span> Call provider
+          </a>
+        ) : (
+          <button className="btn btn-outline" style={{ marginBottom: 10 }} disabled>
+            <span className="material-symbols-outlined">call</span> Provider phone not available
+          </button>
+        )}
 
         <button className="btn btn-outline" style={{ marginBottom:10 }}
           onClick={handleConfirmCall}>

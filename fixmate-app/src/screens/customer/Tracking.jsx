@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
-import { getJob, getProvider } from '../../store';
+import { getJob, getProvider, getProviderPhone } from '../../store';
 import { customerIcon, makeProviderIcon, makeEtaIcon } from '../../components/MapView';
 import TopBar from '../../components/TopBar';
 import ProviderCard from '../../components/ProviderCard';
+import VisitOtpCard from '../../components/VisitOtpCard';
 
 // Interpolate between two [lat,lng] points by fraction t ∈ [0,1]
 function lerp([lat1, lng1], [lat2, lng2], t) {
@@ -122,6 +123,9 @@ export default function Tracking() {
 
   if (!job) { navigate('/home'); return null; }
 
+  const providerPhone = getProviderPhone(provider);
+  const telHref = providerPhone ? `tel:${providerPhone.replace(/[^+\d]/g, '')}` : null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <TopBar title="Provider on the way" back={false} />
@@ -135,6 +139,8 @@ export default function Tracking() {
 
         <div style={{ padding: '16px' }}>
           <ProviderCard provider={provider} compact />
+
+          <VisitOtpCard job={job} />
 
           {/* Status banner */}
           {arrived ? (
@@ -175,10 +181,17 @@ export default function Tracking() {
             }
           </button>
 
-          {!arrived && (
-            <button className="btn btn-ghost" style={{ marginTop: 10 }}
-              onClick={() => alert('Call feature coming in Phase 5')}>
+          {/* Real call link (tel:) — replaces the old "coming in Phase 5"
+              placeholder. Shown whether arrived or not, so the customer
+              can reach the provider en route too. */}
+          {telHref ? (
+            <a className="btn btn-ghost" style={{ marginTop: 10, textDecoration: 'none' }}
+              href={telHref}>
               <span className="material-symbols-outlined">call</span> Call provider
+            </a>
+          ) : (
+            <button className="btn btn-ghost" style={{ marginTop: 10 }} disabled>
+              <span className="material-symbols-outlined">call</span> Provider phone not available
             </button>
           )}
         </div>
