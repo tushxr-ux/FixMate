@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { getJobs, getProviderByUser, saveProvider, saveJob, fmt, addNotif, generateVisitOtp, providerServesCategory } from '../../store';
+import { getJobs, getProviderByUser, getProviders, getUserById, saveProvider, saveJob, fmt, addNotif, generateVisitOtp, providerServesCategory } from '../../store';
 import EmptyState from '../../components/EmptyState';
 import IncomingRequestPopup from '../../components/IncomingRequestPopup';
 
 export default function ProviderDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth();
   const navigate  = useNavigate();
   const toast     = useToast();
   const prov      = user ? getProviderByUser(user.id) : null;
@@ -262,6 +262,67 @@ export default function ProviderDashboard() {
           <div className="stat-card"><div className="val">{incoming.length}</div><div className="lbl">Incoming</div></div>
           <div className="stat-card"><div className="val">{active.length}</div><div className="lbl">Active</div></div>
           <div className="stat-card"><div className="val" style={{ fontSize: 14 }}>{fmt(earnings)}</div><div className="lbl">Earned</div></div>
+        </div>
+
+        {/* Provider switcher (demo): open any provider's profile + jobs */}
+        <div style={{ marginBottom: 18 }}>
+          <p className="section-title" style={{ margin: '0 0 4px' }}>Provider badlo (Demo) — sabka profile kholo</p>
+          <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
+            Kisi provider par tap karo — uska dashboard, uski jobs aur uska OTP gate khul jayega.
+            Job jis provider ko mili hai, usi ko chuno (active jobs wala badge dekho).
+          </p>
+          {incoming.length === 0 && active.length === 0 && (
+            <p style={{ fontSize: 12, color: '#92400E', background: '#FEF3C7', borderRadius: 6, padding: '8px 10px', margin: '0 0 8px' }}>
+              Tumhare paas abhi koi incoming/active job nahi hai — neeche se wo provider chuno jisko job mili hai.
+            </p>
+          )}
+          {getProviders().map(p => {
+            const liveJobs = getJobs({ providerId: p.id }).filter(j =>
+              ['matched', 'accepted', 'diagnosing', 'quote_sent', 'in_progress'].includes(j.status));
+            const isCurrent = prov?.id === p.id;
+            const linkedUser = getUserById(p.userId);
+            return (
+              <div key={p.id} className="prov-card" style={{ marginBottom: 8, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <div className="avatar" style={{ flexShrink: 0 }}>{p.init}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ fontSize: 14, display: 'block', overflowWrap: 'break-word' }}>
+                      {p.name} {isCurrent && <span style={{ fontSize: 11, color: 'var(--blue)' }}>(Tum ye ho)</span>}
+                    </strong>
+                    <span style={{ fontSize: 11, color: 'var(--gray)' }}>
+                      {(p.categories || []).join(', ') || 'General Repair'} · {p.available ? 'Online' : 'Offline'}
+                      {liveJobs.length > 0 && (
+                        <span style={{ color: '#D97706', fontWeight: 700 }}> · {liveJobs.length} active job(s)</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={isCurrent ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm'}
+                    disabled={isCurrent || !linkedUser}
+                    title={!linkedUser ? 'Is provider ka login account nahi hai' : undefined}
+                    onClick={() => {
+                      const u = login(linkedUser.email, 'demo');
+                      if (u) {
+                        // Switcher changes the user without a remount, so
+                        // sync the toggle/slider to the new provider here.
+                        const next = getProviderByUser(u.id);
+                        setAvail(next?.available ?? false);
+                        setRadius(next?.serviceRadius || 5);
+                        toast.success(`Ab tum ${p.name} ke roop me login ho.`);
+                        navigate('/provider');
+                      } else {
+                        toast.warn('Is provider se login nahi ho paya.');
+                      }
+                    }}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {isCurrent ? 'Current' : 'Open karo'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* ⚡ Incoming Job Requests */}

@@ -67,7 +67,7 @@ const drop = (key) => localStorage.removeItem(Config.NS + key);
 const SEED_USERS = [
   {
     id: 'u1',
-    name: 'Tushar Sharma',
+    name: 'Tushar Salunkhe',
     email: 'tushar@demo.com',
     password: 'demo',
     phone: '+91 98765 43210',
@@ -462,6 +462,11 @@ export function initStore() {
   for (const du of NEW_DUMMY_USERS) {
     if (!users.find(u => u.id === du.id)) { users.push(du); changed = true; }
   }
+  // Rename the demo customer account: 'Tushar Sharma' -> 'Tushar Salunkhe'
+  // (user's real surname). Runs on already-seeded devices too, since the
+  // seed above only applies to fresh installs. Touches nothing else.
+  const tushar = users.find(u => u.id === 'u1' && u.name === 'Tushar Sharma');
+  if (tushar) { tushar.name = 'Tushar Salunkhe'; changed = true; }
   if (changed) persist('users', users);
   // Same rule for dummy providers: append only when the id is absent.
   // No dummy jobs are created — an auto-assigned dummy job would change

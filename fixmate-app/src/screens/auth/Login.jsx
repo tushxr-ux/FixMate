@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { getProviders, getUserById, getJobs } from '../../store';
 
 export default function Login() {
   const { login } = useAuth();
@@ -298,6 +299,66 @@ export default function Login() {
                 <span style={{ fontSize: 10, color: '#64748B' }}>Disputes &amp; Pros</span>
               </button>
             </div>
+          </div>
+
+          {/* ── All demo providers: pick any provider to log in as ── */}
+          <div style={{
+            background: '#F8FAFC',
+            border: '1px solid var(--border)',
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 24
+          }}>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: '#1A56DB',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              marginBottom: 4
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>engineering</span>
+              Saare demo providers — kisi se bhi login karo
+            </span>
+            <span style={{ fontSize: 12, color: '#64748B', display: 'block', marginBottom: 10 }}>
+              Job jis provider ko mili hai, usi se login karo — phir uske Job screen par customer wala OTP daal sakoge. Sab demo accounts ka password “demo” hai.
+            </span>
+            {getProviders().map(p => {
+              const u = getUserById(p.userId);
+              if (!u) return null;
+              const liveJobs = getJobs({ providerId: p.id }).filter(j =>
+                ['matched', 'accepted', 'diagnosing', 'quote_sent', 'in_progress'].includes(j.status));
+              return (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 0', borderTop: '1px solid var(--border)',
+                  minWidth: 0
+                }}>
+                  <div className="avatar" style={{ flexShrink: 0 }}>{p.init}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ fontSize: 13, display: 'block', overflowWrap: 'break-word' }}>{p.name}</strong>
+                    <span style={{ fontSize: 11, color: '#64748B' }}>
+                      {(p.categories || []).join(', ') || 'General Repair'} · {p.available ? 'Online' : 'Offline'}
+                      {liveJobs.length > 0 && (
+                        <span style={{ color: '#D97706', fontWeight: 700 }}> · {liveJobs.length} active job(s)</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    disabled={loading}
+                    onClick={() => handleDemoClick(u.email, 'demo')}
+                    style={{ flexShrink: 0 }}
+                  >
+                    Login
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           {/* Divider */}
