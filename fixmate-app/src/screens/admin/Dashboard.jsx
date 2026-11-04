@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { getJobs, getProviders, saveProvider, getProvider, getDisputes, saveDispute, fmt, addNotif, CATEGORIES } from '../../store';
+import { getJobs, getProviders, saveProvider, getProvider, getDisputes, saveDispute, fmt, addNotif, CATEGORIES, getUsers } from '../../store';
 import EmptyState from '../../components/EmptyState';
 
 export default function AdminDashboard() {
@@ -10,12 +10,13 @@ export default function AdminDashboard() {
   const navigate   = useNavigate();
   const toast      = useToast();
 
-  const [activeTab, setActiveTab] = useState('verification'); // verification | disputes | jobs | providers | coverage
+  const [activeTab, setActiveTab] = useState('verification'); // verification | disputes | jobs | providers | customers | coverage
   const [, forceUpdate] = useState(0);
 
   const allJobs  = getJobs();
   const allProvs = getProviders();
   const disputes = getDisputes();
+  const allCustomers = getUsers().filter(u => u.role === 'customer');
 
   const pendingProvs = allProvs.filter(p => !p.verified);
   const openDisputes = disputes.filter(d => d.status === 'under_review');
@@ -120,13 +121,16 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 16, paddingBottom: 4 }}>
+        {/* Tab Navigation — minWidth: 0 is required so the strip itself
+            stays viewport-width and scrolls internally; without it the
+            flex item sizes to its content and pushes the page wide. */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
           {[
             { id: 'verification', label: `Verification (${pendingProvs.length})`, icon: 'verified_user' },
             { id: 'disputes',     label: `Disputes (${openDisputes.length})`,     icon: 'gavel' },
             { id: 'jobs',         label: `Active Jobs (${activeJobs.length})`,    icon: 'assignment' },
             { id: 'providers',    label: `Providers (${allProvs.length})`,       icon: 'engineering' },
+            { id: 'customers',    label: `Customers (${allCustomers.length})`,   icon: 'group' },
             { id: 'coverage',     label: 'Coverage Gaps',                         icon: 'radar' },
           ].map(tab => (
             <button
@@ -149,7 +153,11 @@ export default function AdminDashboard() {
               <EmptyState icon="✅" title="Queue clear" body="All providers have been vetted and verified." />
             ) : (
               pendingProvs.map(p => (
-                <div key={p.id} className="prov-card" style={{ marginBottom: 12 }}>
+                <div
+                  key={p.id} className="prov-card" style={{ marginBottom: 12, cursor: 'pointer' }}
+                  onClick={() => navigate(`/admin/profile/provider/${p.id}`)}
+                  title="Open provider profile"
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <div className="avatar avatar-md">{p.init}</div>
@@ -160,7 +168,7 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                     </div>
-                    <button className="btn btn-primary btn-sm" onClick={() => verifyProvider(p.id)}>
+                    <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); verifyProvider(p.id); }}>
                       Approve &amp; Verify
                     </button>
                   </div>
@@ -276,7 +284,12 @@ export default function AdminDashboard() {
               activeJobs.map(j => {
                 const prov = getProvider(j.providerId);
                 return (
-                  <div key={j.id} className="hist-row">
+                  <div
+                    key={j.id} className="hist-row"
+                    style={prov ? { cursor: 'pointer' } : undefined}
+                    onClick={prov ? () => navigate(`/admin/profile/provider/${prov.id}`) : undefined}
+                    title={prov ? 'Open provider profile' : undefined}
+                  >
                     <div className="avatar" style={{ background: 'var(--blue-50)', color: 'var(--blue)' }}>
                       <span className="material-symbols-outlined">bolt</span>
                     </div>
@@ -297,7 +310,11 @@ export default function AdminDashboard() {
           <div>
             <p className="section-title">Provider Roster &amp; Trust Signals</p>
             {allProvs.map(p => (
-              <div key={p.id} className="prov-card" style={{ marginBottom: 10 }}>
+              <div
+                key={p.id} className="prov-card" style={{ marginBottom: 10, cursor: 'pointer' }}
+                onClick={() => navigate(`/admin/profile/provider/${p.id}`)}
+                title="Open provider profile"
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <div className="avatar avatar-md">{p.init}</div>
@@ -319,6 +336,37 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* TAB 5: Customers */}
+        {activeTab === 'customers' && (
+          <div>
+            <p className="section-title">Customers</p>
+            {allCustomers.length === 0 ? (
+              <EmptyState icon="👥" title="No customers" body="No customer accounts on record yet." />
+            ) : (
+              allCustomers.map(c => {
+                const cJobs = allJobs.filter(j => j.customerId === c.id);
+                return (
+                  <div
+                    key={c.id} className="prov-card" style={{ marginBottom: 10, cursor: 'pointer' }}
+                    onClick={() => navigate(`/admin/profile/customer/${c.id}`)}
+                    title="Open customer profile"
+                  >
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <div className="avatar avatar-md">{c.avatar || 'CU'}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <strong style={{ fontSize: 14 }}>{c.name}</strong>
+                        <span className="meta" style={{ display: 'block', fontSize: 11 }}>
+                          {c.email} · {cJobs.length} job(s)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 

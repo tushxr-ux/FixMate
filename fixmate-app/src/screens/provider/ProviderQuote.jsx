@@ -186,6 +186,14 @@ export default function ProviderQuote() {
             <strong style={{ fontSize: 16 }}>Total Payable</strong>
             <strong style={{ fontSize: 20, color: 'var(--blue)' }}>{fmt(total)}</strong>
           </div>
+          {/* Bill clarity: the customer must accept before work proceeds.
+              Diagnosis-gated so a bare revision quote without a diagnosis
+              does not carry a line about a flow that does not apply. */}
+          {job.diagnosis && (
+            <p style={{ fontSize: 12, color: 'var(--gray)', margin: '10px 0 0', lineHeight: 1.5 }}>
+              Customer ko ye bill bheja jayega — unke accept karne ke baad hi kaam aage badhega.
+            </p>
+          )}
         </div>
 
         {/* Add Part Section */}
@@ -197,14 +205,14 @@ export default function ProviderQuote() {
               placeholder="e.g. Capacitor 35uF, Copper Pipe"
               value={partName}
               onChange={e => setPartName(e.target.value)}
-              style={{ flex: 2, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+              style={{ flex: 2, minWidth: 0, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }}
             />
             <input
               type="number"
               placeholder="Cost (₹)"
               value={partCost}
               onChange={e => setPartCost(e.target.value)}
-              style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+              style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }}
               onKeyDown={e => e.key === 'Enter' && addPart()}
             />
           </div>
@@ -230,14 +238,14 @@ export default function ProviderQuote() {
               placeholder="Reason (e.g. Hidden wiring burnt)"
               value={revisionReason}
               onChange={e => setRevisionReason(e.target.value)}
-              style={{ flex: 2, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+              style={{ flex: 2, minWidth: 0, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }}
             />
             <input
               type="number"
               placeholder="Extra (₹)"
               value={revisionCost}
               onChange={e => setRevisionCost(e.target.value)}
-              style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+              style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }}
               onKeyDown={e => e.key === 'Enter' && addRevisionItem()}
             />
           </div>

@@ -42,6 +42,11 @@ export default function Diagnose() {
   const [diagnosis, setDiagnosis] = useState(job?.diagnosis || '');
   const [notes,     setNotes]     = useState(job?.diagnosisNotes || '');
   const [photos,    setPhotos]    = useState(job?.evidence || []);
+  // Before condition: provider-recorded state of the item BEFORE repair
+  // (short note + one photo). Shown to the customer read-only on
+  // JobDetail; never presented as verified by FixMate.
+  const [beforeNote,  setBeforeNote]  = useState(job?.conditionBefore?.note || '');
+  const [beforePhoto, setBeforePhoto] = useState(job?.conditionBefore?.photoUrl || '');
   const [error,     setError]     = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -90,6 +95,15 @@ export default function Diagnose() {
     setPhotos(prev => prev.filter((_, i) => i !== idx));
   }
 
+  function handleBeforePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => { if (ev.target?.result) setBeforePhoto(ev.target.result); };
+    reader.readAsDataURL(file);
+    toast.success('Before-condition photo attached.');
+  }
+
   function handleNext() {
     if (!diagnosis.trim()) { setError('Please enter your diagnosis findings.'); return; }
     const updated = {
@@ -98,6 +112,11 @@ export default function Diagnose() {
       diagnosis: diagnosis.trim(),
       diagnosisNotes: notes.trim(),
       evidence: photos,
+      // Only store the record when the provider actually recorded
+      // something; an empty block must not create an empty record.
+      ...(beforeNote.trim() || beforePhoto
+        ? { conditionBefore: { note: beforeNote.trim(), photoUrl: beforePhoto, at: Date.now() } }
+        : {}),
     };
     saveJob(updated);
     toast.success('Diagnosis and evidence saved.');
@@ -204,6 +223,34 @@ export default function Diagnose() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Before condition — what the item looked like BEFORE repair.
+            The customer sees this read-only on their job screen. */}
+        <div className="field" style={{ marginBottom: 16 }}>
+          <label htmlFor="beforeNote">Before condition (provider-recorded)</label>
+          <textarea
+            id="beforeNote"
+            placeholder="e.g. Outer body scratched near the vent, one screw missing, dust build-up inside."
+            value={beforeNote}
+            onChange={e => setBeforeNote(e.target.value)}
+            style={{ minHeight: 60 }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+            <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+              {beforePhoto ? 'Change before photo' : 'Attach before photo'}
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBeforePhotoUpload} />
+            </label>
+            {beforePhoto && (
+              <>
+                <img src={beforePhoto} alt="Before condition" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border)' }} />
+                <button type="button" onClick={() => setBeforePhoto('')} style={{ border: 'none', background: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+              </>
+            )}
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--gray)', margin: '6px 0 0' }}>
+            Optional, but recommended: it protects both sides if the item's condition is disputed later.
+          </p>
         </div>
 
         <div className="field" style={{ marginBottom: 20 }}>

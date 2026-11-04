@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getJobs, getProviderByUser, saveProvider, saveJob, fmt, addNotif, generateVisitOtp, providerServesCategory } from '../../store';
 import EmptyState from '../../components/EmptyState';
+import IncomingRequestPopup from '../../components/IncomingRequestPopup';
 
 export default function ProviderDashboard() {
   const { user, logout } = useAuth();
@@ -13,6 +14,11 @@ export default function ProviderDashboard() {
   const [avail, setAvail] = useState(prov?.available ?? false);
   const [radius, setRadius] = useState(prov?.serviceRadius || 5);
   const [showSettings, setShowSettings] = useState(false);
+  // Popup queue state: ids the provider closed with X (neither accepted
+  // nor declined). They stay in the lists below and can be opened from
+  // there; the popup only shows jobs not dismissed in this session.
+  const [dismissed, setDismissed] = useState([]);
+  const [, forceUpdate] = useState(0);
   // Doc-upload previews (Nov 2026 QA: setIdDoc/setBizDoc were called
   // but never declared, so uploading a document threw at runtime).
   const [, setIdDoc] = useState(prov?.idDocUrl || '');
@@ -32,6 +38,17 @@ export default function ProviderDashboard() {
   const openRequests = prov && avail
     ? getJobs({ status: 'pending' }).filter(j => !j.providerId && providerServesCategory(prov, j.category))
     : [];
+
+  // Rapido/Uber-style popup queue: matched (incoming) jobs first, then
+  // open requests. Shown only while available, one at a time, with the
+  // full count so the provider knows more are waiting.
+  const popupQueue = avail
+    ? [
+        ...incoming.map(j => ({ job: j, open: false })),
+        ...openRequests.map(j => ({ job: j, open: true })),
+      ].filter(e => !dismissed.includes(e.job.id))
+    : [];
+  const popupEntry = popupQueue[0] || null;
 
   function toggleAvail(checked) {
     if (!prov) return;
@@ -85,6 +102,23 @@ export default function ProviderDashboard() {
     const updated = { ...job, providerId: null, status: 'pending' };
     saveJob(updated);
     toast.info('Job declined.');
+    forceUpdate(n => n + 1);
+  }
+
+  // Popup actions reuse the exact end states above. Declining an open
+  // (unassigned) request needs no save: the job was never this
+  // provider's, so it simply stays pending for other providers.
+  function handlePopupAccept() {
+    if (!popupEntry) return;
+    if (popupEntry.open) handleAcceptOpenJob(popupEntry.job);
+    else handleAcceptJob(popupEntry.job);
+  }
+  function handlePopupDecline() {
+    if (!popupEntry) return;
+    if (!popupEntry.open) handleDeclineJob(popupEntry.job);
+    else toast.info('Request skipped — it stays open for other providers.');
+    setDismissed(d => [...d, popupEntry.job.id]);
+    forceUpdate(n => n + 1);
   }
 
   // Accept an open (unassigned) request in one tap. End state matches
@@ -357,6 +391,22 @@ export default function ProviderDashboard() {
           </>
         )}
       </div>
+
+      {/* Rapido/Uber-style incoming-request popup (bottom sheet). The
+          inline lists above stay unchanged underneath; X only dismisses
+          the popup for this session, it never accepts or declines. */}
+      {popupEntry && (
+        <IncomingRequestPopup
+          job={popupEntry.job}
+          index={popupQueue.findIndex(e => e.job.id === popupEntry.job.id)}
+          total={popupQueue.length}
+          isOpenRequest={popupEntry.open}
+          onAccept={handlePopupAccept}
+          onDecline={handlePopupDecline}
+          onView={() => navigate(`/provider/job/${popupEntry.job.id}`)}
+          onClose={() => setDismissed(d => [...d, popupEntry.job.id])}
+        />
+      )}
     </div>
   );
 }

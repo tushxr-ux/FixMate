@@ -140,6 +140,37 @@ export default function JobDetail() {
           </div>
         )}
 
+        {/* Before / After condition — provider-recorded, read-only.
+            Shows nothing at all when neither record exists. These are
+            the provider's own notes/photos, not verified by FixMate. */}
+        {(job.conditionBefore || job.conditionAfter) && (
+          <div className="prov-card" style={{ marginBottom: 14 }}>
+            <p className="section-title" style={{ margin: '0 0 8px', fontSize: 13 }}>Before / After condition</p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {[
+                { label: 'Before repair', rec: job.conditionBefore },
+                { label: 'After repair', rec: job.conditionAfter },
+              ].map(({ label, rec }) => rec && (
+                <div key={label} style={{ flex: '1 1 150px', minWidth: 0, background: '#F8FAFC', borderRadius: 8, padding: 10 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray)', display: 'block', marginBottom: 6 }}>{label}</span>
+                  {rec.photoUrl && (
+                    <img src={rec.photoUrl} alt={label} style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginBottom: 6 }} />
+                  )}
+                  {rec.note && <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.5, overflowWrap: 'break-word' }}>{rec.note}</p>}
+                  {rec.at && (
+                    <span style={{ fontSize: 11, color: 'var(--gray)' }}>
+                      {new Date(rec.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--gray)', margin: '8px 0 0' }}>
+              Provider ne ye record kiya hai — FixMate ne isko verify nahi kiya hai.
+            </p>
+          </div>
+        )}
+
         {/* Revisions history */}
         {job.revisions?.length > 0 && (
           <div className="prov-card" style={{ marginBottom: 14, background: '#FFFBEB' }}>

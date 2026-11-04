@@ -14,6 +14,11 @@ export default function ProviderJob() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Customer unavailable / no-show');
   const [afterPhoto, setAfterPhoto] = useState('');
+  // After condition: provider-recorded state AFTER repair (note + one
+  // photo), attached when the job is marked complete. Kept separate
+  // from the existing after-repair evidence photo, which stays as-is.
+  const [afterNote, setAfterNote] = useState(job?.conditionAfter?.note || '');
+  const [afterCondPhoto, setAfterCondPhoto] = useState(job?.conditionAfter?.photoUrl || '');
   const [completing, setCompleting] = useState(false);
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState('');
@@ -48,6 +53,11 @@ export default function ProviderJob() {
 
   const customer = job.customerId ? getUserById(job.customerId) : null;
   const prov = job.providerId ? getProvider(job.providerId) : null;
+  // Ride-hailing privacy rule: the customer phone number is visible to
+  // the provider only AFTER accept (accepted and later statuses). On a
+  // merely matched (incoming) job the provider must not see or dial it
+  // yet — the popup already hides it, and so does this card.
+  const phoneVisible = ['accepted', 'diagnosing', 'quote_sent', 'in_progress', 'completed'].includes(job.status);
 
   function handleAccept() {
     const updated = { ...job, status: 'accepted' };
@@ -100,6 +110,15 @@ export default function ProviderJob() {
     reader.readAsDataURL(file);
   }
 
+  function handleAfterCondPhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => { if (ev.target?.result) setAfterCondPhoto(ev.target.result); };
+    reader.readAsDataURL(file);
+    toast.success('After-condition photo attached.');
+  }
+
   function handleCompleteJob() {
     setCompleting(true);
     setTimeout(() => {
@@ -111,7 +130,10 @@ export default function ProviderJob() {
         ...job,
         status: 'completed',
         evidence: updatedEvidence,
-        completedAt: Date.now()
+        completedAt: Date.now(),
+        ...(afterNote.trim() || afterCondPhoto
+          ? { conditionAfter: { note: afterNote.trim(), photoUrl: afterCondPhoto, at: Date.now() } }
+          : {}),
       };
       saveJob(updated);
       setJob(updated);
@@ -177,10 +199,14 @@ export default function ProviderJob() {
               </div>
               <div>
                 <strong style={{ fontSize: 15, display: 'block' }}>{customer?.name || 'Customer'}</strong>
-                <span className="meta" style={{ fontSize: 12 }}>{customer?.phone || '+91 98765 43210'}</span>
+                <span className="meta" style={{ fontSize: 12 }}>
+                  {phoneVisible
+                    ? (customer?.phone || 'Phone number not available')
+                    : 'Phone number accept karne ke baad dikhega'}
+                </span>
               </div>
             </div>
-            {customer?.phone && (
+            {customer?.phone && phoneVisible && (
               <a 
                 href={`tel:${customer.phone}`}
                 className="btn btn-outline btn-sm"
@@ -451,15 +477,41 @@ export default function ProviderJob() {
                 )}
               </div>
 
+              {/* After condition — what the item looks like AFTER repair.
+                  Shown to the customer read-only, next to the before record. */}
+              <div style={{ padding: '12px', border: '1px dashed var(--border)', borderRadius: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                  After condition (provider-recorded)
+                </span>
+                <textarea
+                  placeholder="e.g. Body cleaned, vent cover refitted, all screws in place, tested working."
+                  value={afterNote}
+                  onChange={e => setAfterNote(e.target.value)}
+                  style={{ width: '100%', minHeight: 56, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+                  <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+                    {afterCondPhoto ? 'Change after photo' : 'Attach after photo'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAfterCondPhotoUpload} />
+                  </label>
+                  {afterCondPhoto && (
+                    <>
+                      <img src={afterCondPhoto} alt="After condition" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                      <button type="button" onClick={() => setAfterCondPhoto('')} style={{ border: 'none', background: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: 8 }}>
-                <button 
+                <button
                   className="btn btn-outline"
                   style={{ flex: 1, fontSize: 12 }}
                   onClick={() => navigate(`/provider/quote/${job.id}?revision=true`)}
                 >
                   + Add-on / Revision
                 </button>
-                <button 
+                <button
                   className="btn btn-primary"
                   style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   onClick={handleCompleteJob}

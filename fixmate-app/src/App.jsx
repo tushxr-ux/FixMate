@@ -37,6 +37,7 @@ const ProviderQuote     = lazy(() => import('./screens/provider/ProviderQuote'))
 
 // Admin
 const AdminDashboard    = lazy(() => import('./screens/admin/Dashboard'));
+const AdminProfileDetail = lazy(() => import('./screens/admin/ProfileDetail'));
 
 function isMobileDevice() {
   if (typeof window === 'undefined') return false;
@@ -264,6 +265,9 @@ function AppLayout() {
             {/* Admin Management */}
             <Route path="/admin" element={
               <RequireAuth requiredRole="admin"><AdminDashboard /></RequireAuth>
+            } />
+            <Route path="/admin/profile/:kind/:id" element={
+              <RequireAuth requiredRole="admin"><AdminProfileDetail /></RequireAuth>
             } />
 
             {/* Fallback */}

@@ -392,6 +392,57 @@ const PROVIDER_DEMO_USERS = [
   { id: 'p_s7', name: 'Akurli Fast Towing & Mobile Garage',   email: 'towing@demo.com',    password: 'demo', phone: '', role: 'provider', avatar: 'AF', address: 'Near Growel\'s 101 Mall, Akurli Road, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
 ];
 
+/* ── Extra dummy data (Nov 2026, provider/admin profile work) ──
+   3 dummy providers (Kandivali East/West, one unverified so it lands
+   in the admin verification queue, two verified) + 2 dummy customers.
+   Phones are blank on purpose — no invented numbers. All names/emails
+   are obviously demo (@demo.com) and the password is 'demo', matching
+   the other demo logins. Appended only when the id is absent; never
+   resets existing devices' data, and no dummy jobs are created. */
+const NEW_DUMMY_PROVIDERS = [
+  {
+    id: 'prov8', userId: 'p_s8',
+    name: 'Demo Sharma Home Appliances & AC (Test)', init: 'DS',
+    specialties: ['Demo AC Servicing', 'Demo Washing Machine Repair'],
+    rating: 4.5, totalJobs: 12, distKm: 0.9,
+    verified: true, idVerified: true, bizVerified: true, available: true,
+    lat: 19.2105, lng: 72.8755, area: 'Thakur Village, Kandivali East',
+    address: 'Demo Shop, Thakur Village, Kandivali East, Mumbai',
+    categories: ['electronics'], serviceRadius: 5, newProvider: false,
+    cancellations: 0, noShows: 0,
+  },
+  {
+    id: 'prov9', userId: 'p_s9',
+    name: 'Demo Kandivali West Bike & Scooter Garage (Test)', init: 'DK',
+    specialties: ['Demo Bike Service', 'Demo Scooter Breakdown Help'],
+    rating: 4.3, totalJobs: 8, distKm: 2.1,
+    verified: true, idVerified: true, bizVerified: false, available: true,
+    lat: 19.2075, lng: 72.8370, area: 'Mahavir Nagar, Kandivali West',
+    address: 'Demo Garage, Mahavir Nagar, Kandivali West, Mumbai',
+    categories: ['mechanic'], serviceRadius: 6, newProvider: false,
+    cancellations: 0, noShows: 0,
+  },
+  {
+    id: 'prov10', userId: 'p_s10',
+    name: 'Demo Gokul Plumbing & Fittings (Test)', init: 'DG',
+    specialties: ['Demo Tap Fitting', 'Demo Drain Cleaning'],
+    rating: 0, totalJobs: 0, distKm: 1.4,
+    verified: false, idVerified: false, bizVerified: false, available: false,
+    lat: 19.2088, lng: 72.8728, area: 'Thakur Complex, Kandivali East',
+    address: 'Demo Shop, Thakur Complex, Kandivali East, Mumbai',
+    categories: ['plumber'], serviceRadius: 4, newProvider: true, visibilityCap: 3,
+    cancellations: 0, noShows: 0,
+  },
+];
+
+const NEW_DUMMY_USERS = [
+  { id: 'p_s8',  name: 'Demo Sharma Home Appliances & AC (Test)',          email: 'demo-sharma@demo.com',  password: 'demo', phone: '', role: 'provider', avatar: 'DS', address: 'Demo Shop, Thakur Village, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s9',  name: 'Demo Kandivali West Bike & Scooter Garage (Test)',  email: 'demo-bike@demo.com',     password: 'demo', phone: '', role: 'provider', avatar: 'DK', address: 'Demo Garage, Mahavir Nagar, Kandivali West, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'p_s10', name: 'Demo Gokul Plumbing & Fittings (Test)',             email: 'demo-plumbing@demo.com',  password: 'demo', phone: '', role: 'provider', avatar: 'DG', address: 'Demo Shop, Thakur Complex, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'u5',    name: 'Demo Priya (Test Customer)',                        email: 'demo-priya@demo.com',    password: 'demo', phone: '', role: 'customer', avatar: 'DP', address: 'Demo Flat, Mahavir Nagar, Kandivali West, Mumbai', wallet: { balance: 500, holds: [] } },
+  { id: 'u6',    name: 'Demo Arjun (Test Customer)',                        email: 'demo-arjun@demo.com',    password: 'demo', phone: '', role: 'customer', avatar: 'DA', address: 'Demo Flat, Thakur Village, Kandivali East, Mumbai', wallet: { balance: 500, holds: [] } },
+];
+
 /* ── Init (seed once) ─────────────────────── */
 export function initStore() {
   if (!recall('seeded_mumbai_kandivali_v3')) {
@@ -408,7 +459,19 @@ export function initStore() {
   for (const pu of PROVIDER_DEMO_USERS) {
     if (!users.find(u => u.id === pu.id)) { users.push(pu); changed = true; }
   }
+  for (const du of NEW_DUMMY_USERS) {
+    if (!users.find(u => u.id === du.id)) { users.push(du); changed = true; }
+  }
   if (changed) persist('users', users);
+  // Same rule for dummy providers: append only when the id is absent.
+  // No dummy jobs are created — an auto-assigned dummy job would change
+  // Matching behaviour, so these providers simply wait for real jobs.
+  const providers = recall('providers', []);
+  let provChanged = false;
+  for (const dp of NEW_DUMMY_PROVIDERS) {
+    if (!providers.find(p => p.id === dp.id)) { providers.push(dp); provChanged = true; }
+  }
+  if (provChanged) persist('providers', providers);
 }
 
 
@@ -652,6 +715,12 @@ export function saveProvider(prov) {
 /* ── Users ────────────────────────────────── */
 export function getUserById(id) {
   return recall('users', []).find(u => u.id === id) || null;
+}
+
+// All stored users (admin Customers tab). No filtering here — callers
+// filter by role themselves.
+export function getUsers() {
+  return recall('users', []);
 }
 
 // §6.2: Wallet hold/release for scheduled bookings (no-show protection)
