@@ -202,7 +202,7 @@ export default function ProviderJob() {
                 <span className="meta" style={{ fontSize: 12 }}>
                   {phoneVisible
                     ? (customer?.phone || 'Phone number not available')
-                    : 'Phone number accept karne ke baad dikhega'}
+                    : 'Phone number will be visible after acceptance'}
                 </span>
               </div>
             </div>

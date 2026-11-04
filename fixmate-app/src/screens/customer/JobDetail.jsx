@@ -166,7 +166,7 @@ export default function JobDetail() {
               ))}
             </div>
             <p style={{ fontSize: 11, color: 'var(--gray)', margin: '8px 0 0' }}>
-              Provider ne ye record kiya hai — FixMate ne isko verify nahi kiya hai.
+              This record was added by the provider — FixMate has not verified it.
             </p>
           </div>
         )}

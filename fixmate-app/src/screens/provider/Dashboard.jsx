@@ -266,14 +266,14 @@ export default function ProviderDashboard() {
 
         {/* Provider switcher (demo): open any provider's profile + jobs */}
         <div style={{ marginBottom: 18 }}>
-          <p className="section-title" style={{ margin: '0 0 4px' }}>Provider badlo (Demo) — sabka profile kholo</p>
+          <p className="section-title" style={{ margin: '0 0 4px' }}>Switch provider (Demo) — open any profile</p>
           <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
-            Kisi provider par tap karo — uska dashboard, uski jobs aur uska OTP gate khul jayega.
-            Job jis provider ko mili hai, usi ko chuno (active jobs wala badge dekho).
+            Tap any provider to open their dashboard, their jobs, and their OTP gate.
+            Pick the provider who got the job (look for the active jobs badge).
           </p>
           {incoming.length === 0 && active.length === 0 && (
             <p style={{ fontSize: 12, color: '#92400E', background: '#FEF3C7', borderRadius: 6, padding: '8px 10px', margin: '0 0 8px' }}>
-              Tumhare paas abhi koi incoming/active job nahi hai — neeche se wo provider chuno jisko job mili hai.
+              You have no incoming/active jobs right now — pick the provider who got the job from the list below.
             </p>
           )}
           {getProviders().map(p => {
@@ -287,7 +287,7 @@ export default function ProviderDashboard() {
                   <div className="avatar" style={{ flexShrink: 0 }}>{p.init}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <strong style={{ fontSize: 14, display: 'block', overflowWrap: 'break-word' }}>
-                      {p.name} {isCurrent && <span style={{ fontSize: 11, color: 'var(--blue)' }}>(Tum ye ho)</span>}
+                      {p.name} {isCurrent && <span style={{ fontSize: 11, color: 'var(--blue)' }}>(This is you)</span>}
                     </strong>
                     <span style={{ fontSize: 11, color: 'var(--gray)' }}>
                       {(p.categories || []).join(', ') || 'General Repair'} · {p.available ? 'Online' : 'Offline'}
@@ -300,7 +300,7 @@ export default function ProviderDashboard() {
                     type="button"
                     className={isCurrent ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm'}
                     disabled={isCurrent || !linkedUser}
-                    title={!linkedUser ? 'Is provider ka login account nahi hai' : undefined}
+                    title={!linkedUser ? 'This provider has no login account' : undefined}
                     onClick={() => {
                       const u = login(linkedUser.email, 'demo');
                       if (u) {
@@ -309,15 +309,15 @@ export default function ProviderDashboard() {
                         const next = getProviderByUser(u.id);
                         setAvail(next?.available ?? false);
                         setRadius(next?.serviceRadius || 5);
-                        toast.success(`Ab tum ${p.name} ke roop me login ho.`);
+                        toast.success(`You are now logged in as ${p.name}.`);
                         navigate('/provider');
                       } else {
-                        toast.warn('Is provider se login nahi ho paya.');
+                        toast.warn('Could not log in as this provider.');
                       }
                     }}
                     style={{ flexShrink: 0 }}
                   >
-                    {isCurrent ? 'Current' : 'Open karo'}
+                    {isCurrent ? 'Current' : 'Open'}
                   </button>
                 </div>
               </div>

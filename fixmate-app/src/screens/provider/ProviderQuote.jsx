@@ -191,7 +191,7 @@ export default function ProviderQuote() {
               does not carry a line about a flow that does not apply. */}
           {job.diagnosis && (
             <p style={{ fontSize: 12, color: 'var(--gray)', margin: '10px 0 0', lineHeight: 1.5 }}>
-              Customer ko ye bill bheja jayega — unke accept karne ke baad hi kaam aage badhega.
+              This bill will be sent to the customer — work proceeds only after they accept it.
             </p>
           )}
         </div>

@@ -321,10 +321,10 @@ export default function Login() {
               marginBottom: 4
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>engineering</span>
-              Saare demo providers — kisi se bhi login karo
+              All demo providers — log in as any provider
             </span>
             <span style={{ fontSize: 12, color: '#64748B', display: 'block', marginBottom: 10 }}>
-              Job jis provider ko mili hai, usi se login karo — phir uske Job screen par customer wala OTP daal sakoge. Sab demo accounts ka password “demo” hai.
+              Log in as the provider who got the job — then you can enter the customer&apos;s OTP on their Job screen. All demo accounts use the password “demo”.
             </span>
             {getProviders().map(p => {
               const u = getUserById(p.userId);
