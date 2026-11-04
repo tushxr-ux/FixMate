@@ -184,6 +184,38 @@ export default function JobDetail() {
           </div>
         )}
 
+        {/* Quote awaiting decision — previously this screen showed only
+            the breakdown with no way to accept/reject: the Accept/Reject
+            buttons live on /quote/:jobId, reachable only from Home and
+            Tracking, so a customer opening the job from History was
+            stuck (reported 4 Nov 2026 with screenshots). This banner +
+            button links straight to the quote decision screen, for both
+            an initial quote (quote_sent) and a pending change-order
+            revision (in_progress with unaccepted addOns — accepting a
+            revision clears addOns, so this only shows while one is
+            genuinely pending). */}
+        {(job.status === 'quote_sent' || (job.status === 'in_progress' && (job.addOns || []).length > 0)) && (
+          <div style={{
+            padding: '14px 16px', borderRadius: 8, marginBottom: 14,
+            background: '#EFF6FF', border: '1.5px solid var(--blue)'
+          }}>
+            <strong style={{ fontSize: 14, display: 'block', marginBottom: 4, color: 'var(--blue)' }}>
+              {job.status === 'quote_sent' ? 'Provider sent a quote — Accept or Reject it' : 'Provider sent a new revision — Review it'}
+            </strong>
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+              Total {fmt(job.total)} — full breakdown below. Open the quote screen to accept or reject.
+            </p>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate(`/quote/${job.id}`)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <span className="material-symbols-outlined">description</span>
+              Review Quote — Accept / Reject
+            </button>
+          </div>
+        )}
+
         {/* Invoice breakdown */}
         <p className="section-title">
           {job.status === 'completed' ? 'Itemized Invoice' : 'Quote Breakdown'}
@@ -220,7 +252,17 @@ export default function JobDetail() {
 
         {/* Action Buttons */}
         <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button 
+          {(job.status === 'quote_sent' || (job.status === 'in_progress' && (job.addOns || []).length > 0)) && (
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate(`/quote/${job.id}`)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <span className="material-symbols-outlined">description</span>
+              Review Quote — Accept / Reject
+            </button>
+          )}
+          <button
             className="btn btn-primary"
             onClick={() => navigate(`/items/${job.category}`)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
